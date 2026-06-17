@@ -503,7 +503,7 @@ h2 {
   right: auto !important;
   bottom: max(12px, env(safe-area-inset-bottom)) !important;
   left: 50% !important;
-  z-index: 9999 !important;
+  z-index: 90 !important;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -645,7 +645,7 @@ input[type="range"] {
 .queue-panel {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: 220;
   display: none;
   align-items: flex-end;
   justify-content: center;
@@ -659,6 +659,20 @@ body:not(.theme-dark) .queue-panel {
 
 .queue-panel.open {
   display: flex;
+}
+
+#playlistDetailPanel.open {
+  z-index: 240;
+}
+
+#favoriteAddPanel.open,
+#playlistAddPanel.open,
+#songActionPanel.open,
+#playlistTargetPanel.open,
+#confirmPanel.open,
+#timerPanel.open,
+#queuePanel.open {
+  z-index: 320;
 }
 
 .panel-card {
@@ -689,7 +703,42 @@ body:not(.theme-dark) .queue-panel {
 }
 
 .compact .song-row {
-  min-height: 64px;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  min-height: 76px;
+  flex-shrink: 0;
+  gap: 12px;
+  padding: 10px;
+}
+
+.compact .song-cover {
+  width: 58px;
+  height: 58px;
+}
+
+.compact .song-main {
+  display: grid;
+  align-content: center;
+  min-width: 0;
+}
+
+.compact .song-title {
+  line-height: 1.15;
+}
+
+.compact .waveform {
+  width: 100%;
+  max-width: 210px;
+  height: 22px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.compact .waveform span {
+  width: 3px;
+  flex: 0 0 3px;
+}
+
+.compact .song-actions {
   flex-shrink: 0;
 }
 

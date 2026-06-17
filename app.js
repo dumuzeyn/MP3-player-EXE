@@ -132,7 +132,20 @@ function setPlayerOpen(open) {
 function updateMiniPlayerVisibility() {
   // RU: Миниплеер не должен дублировать большой плеер, но должен возвращаться после выхода.
   // EN: The mini player should not duplicate the full player, but returns when it closes.
-  miniPlayer.hidden = !currentSong() || playerSheet.classList.contains("open");
+  const panelOpen = Boolean(document.querySelector(".queue-panel.open"));
+  miniPlayer.hidden = !currentSong() || playerSheet.classList.contains("open") || panelOpen;
+}
+
+function openPanel(panel) {
+  panel.classList.add("open");
+  panel.setAttribute("aria-hidden", "false");
+  updateMiniPlayerVisibility();
+}
+
+function closePanel(panel) {
+  panel.classList.remove("open");
+  panel.setAttribute("aria-hidden", "true");
+  updateMiniPlayerVisibility();
 }
 
 function formatTime(seconds) {
@@ -494,14 +507,12 @@ function openConfirmDialog(title, message, onConfirm) {
   confirmTitle.textContent = title;
   confirmMessage.textContent = message;
   pendingConfirmAction = onConfirm;
-  confirmPanel.classList.add("open");
-  confirmPanel.setAttribute("aria-hidden", "false");
+  openPanel(confirmPanel);
 }
 
 function closeConfirmDialog() {
   pendingConfirmAction = null;
-  confirmPanel.classList.remove("open");
-  confirmPanel.setAttribute("aria-hidden", "true");
+  closePanel(confirmPanel);
 }
 
 function requestDeleteSong(songId) {
@@ -561,21 +572,18 @@ function openSongActionPanel(songId) {
   songActionFavorite.classList.toggle("active", favorite);
   songActionFavoriteIcon.textContent = favorite ? "\u2665" : "\u2661";
   songActionFavoriteText.textContent = favorite ? "\u0423\u0431\u0440\u0430\u0442\u044c \u0438\u0437 \u0438\u0437\u0431\u0440\u0430\u043d\u043d\u043e\u0433\u043e" : "\u0412 \u0438\u0437\u0431\u0440\u0430\u043d\u043d\u043e\u0435";
-  songActionPanel.classList.add("open");
-  songActionPanel.setAttribute("aria-hidden", "false");
+  openPanel(songActionPanel);
 }
 
 function closeSongActionPanel() {
   state.actionSongId = null;
-  songActionPanel.classList.remove("open");
-  songActionPanel.setAttribute("aria-hidden", "true");
+  closePanel(songActionPanel);
 }
 
 function closePlaylistTargetPanel() {
   state.playlistTargetSongId = null;
   playlistTargetName.value = "";
-  playlistTargetPanel.classList.remove("open");
-  playlistTargetPanel.setAttribute("aria-hidden", "true");
+  closePanel(playlistTargetPanel);
 }
 
 function addSongToPlaylist(playlistId, songId) {
@@ -610,8 +618,7 @@ function openPlaylistTargetPanel(songId) {
   state.playlistTargetSongId = songId;
   playlistTargetTitle.textContent = `\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c "${song.title}"`;
   renderPlaylistTargetList();
-  playlistTargetPanel.classList.add("open");
-  playlistTargetPanel.setAttribute("aria-hidden", "false");
+  openPanel(playlistTargetPanel);
 }
 
 function escapeHtml(value) {
@@ -825,8 +832,7 @@ function openGroupDetailPanel(name, songs) {
   state.groupDetailSongs = sortedSongs(songs);
   state.groupDetailTitle = name;
   renderPlaylistDetail();
-  playlistDetailPanel.classList.add("open");
-  playlistDetailPanel.setAttribute("aria-hidden", "false");
+  openPanel(playlistDetailPanel);
 }
 
 function renderGroups() {
@@ -922,14 +928,12 @@ function deletePlaylist(playlistId) {
   state.playlists = state.playlists.filter((item) => item.id !== playlistId);
   if (state.viewingPlaylistId === playlistId) {
     state.viewingPlaylistId = null;
-    playlistDetailPanel.classList.remove("open");
-    playlistDetailPanel.setAttribute("aria-hidden", "true");
+    closePanel(playlistDetailPanel);
   }
   if (state.editingPlaylistId === playlistId) {
     state.editingPlaylistId = null;
     state.pendingPlaylistIds.clear();
-    playlistAddPanel.classList.remove("open");
-    playlistAddPanel.setAttribute("aria-hidden", "true");
+    closePanel(playlistAddPanel);
   }
   saveLibraryState();
   render();
@@ -943,8 +947,7 @@ function playlistSongs(playlistId) {
 function openPlaylistDetailPanel(playlistId) {
   state.viewingPlaylistId = playlistId;
   renderPlaylistDetail();
-  playlistDetailPanel.classList.add("open");
-  playlistDetailPanel.setAttribute("aria-hidden", "false");
+  openPanel(playlistDetailPanel);
 }
 
 function renderPlaylistDetail() {
@@ -965,8 +968,7 @@ function openPlaylistAddPanel(playlistId) {
   const playlist = state.playlists.find((item) => item.id === playlistId);
   playlistAddTitle.textContent = `\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0432 ${playlist?.name || "\u043f\u043b\u0435\u0439\u043b\u0438\u0441\u0442"}`;
   renderPlaylistAddList();
-  playlistAddPanel.classList.add("open");
-  playlistAddPanel.setAttribute("aria-hidden", "false");
+  openPanel(playlistAddPanel);
 }
 
 function renderPlaylistAddList() {
@@ -1106,21 +1108,18 @@ playlistSearchInput.addEventListener("input", () => {
 
 favoriteAddButton.addEventListener("click", () => {
   if (favoriteAddPanel.classList.contains("open")) {
-    favoriteAddPanel.classList.remove("open");
-    favoriteAddPanel.setAttribute("aria-hidden", "true");
+    closePanel(favoriteAddPanel);
     state.pendingFavoriteIds.clear();
     render();
     return;
   }
   state.pendingFavoriteIds.clear();
   renderFavoriteAddList();
-  favoriteAddPanel.classList.add("open");
-  favoriteAddPanel.setAttribute("aria-hidden", "false");
+  openPanel(favoriteAddPanel);
 });
 
 document.querySelector("#closeFavoriteAdd").addEventListener("click", () => {
-  favoriteAddPanel.classList.remove("open");
-  favoriteAddPanel.setAttribute("aria-hidden", "true");
+  closePanel(favoriteAddPanel);
   state.pendingFavoriteIds.clear();
 });
 
@@ -1128,14 +1127,12 @@ confirmFavoriteAdd.addEventListener("click", () => {
   state.pendingFavoriteIds.forEach((id) => state.favorites.add(id));
   state.pendingFavoriteIds.clear();
   saveLibraryState();
-  favoriteAddPanel.classList.remove("open");
-  favoriteAddPanel.setAttribute("aria-hidden", "true");
+  closePanel(favoriteAddPanel);
   render();
 });
 
 document.querySelector("#closePlaylistAdd").addEventListener("click", () => {
-  playlistAddPanel.classList.remove("open");
-  playlistAddPanel.setAttribute("aria-hidden", "true");
+  closePanel(playlistAddPanel);
   state.editingPlaylistId = null;
   state.pendingPlaylistIds.clear();
 });
@@ -1149,15 +1146,13 @@ confirmPlaylistAdd.addEventListener("click", () => {
     saveLibraryState();
   }
   state.pendingPlaylistIds.clear();
-  playlistAddPanel.classList.remove("open");
-  playlistAddPanel.setAttribute("aria-hidden", "true");
+  closePanel(playlistAddPanel);
   state.editingPlaylistId = null;
   render();
 });
 
 document.querySelector("#closePlaylistDetail").addEventListener("click", () => {
-  playlistDetailPanel.classList.remove("open");
-  playlistDetailPanel.setAttribute("aria-hidden", "true");
+  closePanel(playlistDetailPanel);
   state.viewingPlaylistId = null;
   state.groupDetailSongs = [];
   state.groupDetailTitle = "";
@@ -1220,8 +1215,7 @@ confirmYes.addEventListener("click", async () => {
 playlistDetailAddButton.addEventListener("click", () => {
   if (!state.viewingPlaylistId) return;
   if (playlistAddPanel.classList.contains("open") && state.editingPlaylistId === state.viewingPlaylistId) {
-    playlistAddPanel.classList.remove("open");
-    playlistAddPanel.setAttribute("aria-hidden", "true");
+    closePanel(playlistAddPanel);
     state.pendingPlaylistIds.clear();
     state.editingPlaylistId = null;
     render();
@@ -1233,8 +1227,7 @@ playlistDetailAddButton.addEventListener("click", () => {
 [favoriteAddPanel, playlistAddPanel, playlistDetailPanel, queuePanel, timerPanel, songActionPanel, playlistTargetPanel, confirmPanel].forEach((panel) => {
   panel.addEventListener("click", (event) => {
     if (event.target !== panel) return;
-    panel.classList.remove("open");
-    panel.setAttribute("aria-hidden", "true");
+    closePanel(panel);
     if (panel === favoriteAddPanel) state.pendingFavoriteIds.clear();
     if (panel === playlistAddPanel) {
       state.pendingPlaylistIds.clear();
@@ -1362,10 +1355,10 @@ themeToggle.addEventListener("click", () => {
   applyTheme();
 });
 
-document.querySelector("#queueButton").addEventListener("click", () => queuePanel.classList.add("open"));
-document.querySelector("#closeQueue").addEventListener("click", () => queuePanel.classList.remove("open"));
-document.querySelector("#timerButton").addEventListener("click", () => timerPanel.classList.add("open"));
-document.querySelector("#closeTimer").addEventListener("click", () => timerPanel.classList.remove("open"));
+document.querySelector("#queueButton").addEventListener("click", () => openPanel(queuePanel));
+document.querySelector("#closeQueue").addEventListener("click", () => closePanel(queuePanel));
+document.querySelector("#timerButton").addEventListener("click", () => openPanel(timerPanel));
+document.querySelector("#closeTimer").addEventListener("click", () => closePanel(timerPanel));
 playButton.addEventListener("click", togglePlay);
 document.querySelector("#nextButton").addEventListener("click", playNext);
 document.querySelector("#prevButton").addEventListener("click", playPrevious);
@@ -1393,7 +1386,7 @@ function setSleepTimer(minutes) {
     state.timerEndsAt = null;
     render();
   }, minutes * 60 * 1000);
-  timerPanel.classList.remove("open");
+  closePanel(timerPanel);
   render();
 }
 
