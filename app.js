@@ -1284,14 +1284,15 @@ function setupInfiniteToolbar() {
   });
 
   let isDragging = false;
-  let dragStarted = false;
+  let didDragToolbar = false;
+  let suppressNextToolbarClick = false;
   let dragStartX = 0;
   let dragStartScroll = 0;
 
   toolbar.addEventListener("pointerdown", (event) => {
     if (event.button !== undefined && event.button !== 0) return;
     isDragging = true;
-    dragStarted = false;
+    didDragToolbar = false;
     dragStartX = event.clientX;
     dragStartScroll = toolbar.scrollLeft;
     toolbar.setPointerCapture?.(event.pointerId);
@@ -1300,8 +1301,9 @@ function setupInfiniteToolbar() {
   toolbar.addEventListener("pointermove", (event) => {
     if (!isDragging) return;
     const delta = event.clientX - dragStartX;
-    if (Math.abs(delta) > 4) dragStarted = true;
-    if (!dragStarted) return;
+    if (Math.abs(delta) <= 8 && !didDragToolbar) return;
+    didDragToolbar = true;
+    suppressNextToolbarClick = true;
     toolbar.classList.add("dragging");
     toolbar.scrollLeft = dragStartScroll - delta;
     event.preventDefault();
@@ -1309,10 +1311,20 @@ function setupInfiniteToolbar() {
 
   const stopToolbarDrag = (event) => {
     if (!isDragging) return;
+    const wasDrag = didDragToolbar;
     isDragging = false;
     toolbar.releasePointerCapture?.(event.pointerId);
     toolbar.classList.remove("dragging");
-    window.setTimeout(() => { dragStarted = false; }, 0);
+
+    if (!wasDrag) {
+      const target = document.elementFromPoint(event.clientX, event.clientY);
+      const button = target?.closest?.(".pill");
+      if (button && toolbar.contains(button)) {
+        selectView(button.dataset.view);
+        renderToolbar();
+        suppressNextToolbarClick = true;
+      }
+    }
   };
 
   toolbar.addEventListener("pointerup", stopToolbarDrag);
@@ -1329,10 +1341,10 @@ function setupInfiniteToolbar() {
   }, { passive: false });
 
   toolbar.addEventListener("click", (event) => {
-    if (dragStarted) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
+    if (!suppressNextToolbarClick) return;
+    suppressNextToolbarClick = false;
+    event.preventDefault();
+    event.stopPropagation();
   }, true);
 }
 
