@@ -10,6 +10,12 @@ const miniArtist = document.querySelector("#miniArtist");
 const miniState = document.querySelector("#miniState");
 const playerSheet = document.querySelector("#playerSheet");
 const themeToggle = document.querySelector("#themeToggle");
+const settingsThemeToggle = document.querySelector("#settingsThemeToggle");
+const settingsThemeValue = document.querySelector("#settingsThemeValue");
+const languageEnglish = document.querySelector("#languageEnglish");
+const languageRussian = document.querySelector("#languageRussian");
+const deleteAllSongsButton = document.querySelector("#deleteAllSongsButton");
+const deleteAllPlaylistsButton = document.querySelector("#deleteAllPlaylistsButton");
 const queuePanel = document.querySelector("#queuePanel");
 const timerPanel = document.querySelector("#timerPanel");
 const customTimerRow = document.querySelector("#customTimerRow");
@@ -105,6 +111,7 @@ const state = {
   playlistTargetSongId: null,
   stopAfterCurrent: false,
   theme: localStorage.getItem("theme") || "light",
+  language: localStorage.getItem("language") || "ru",
 };
 
 let pendingConfirmAction = null;
@@ -118,8 +125,69 @@ const loopText = {
 function applyTheme() {
   // EN: Theme is stored separately from the library so the chosen look survives restarts.
   document.body.classList.toggle("theme-dark", state.theme === "dark");
-  themeToggle.textContent = state.theme === "dark" ? "\u25d1" : "\u25d0";
-  themeToggle.title = state.theme === "dark" ? "\u0411\u0435\u043b\u043e-\u0447\u0435\u0440\u043d\u044b\u0439 \u0440\u0435\u0436\u0438\u043c" : "\u0427\u0435\u0440\u043d\u043e-\u0431\u0435\u043b\u044b\u0439 \u0440\u0435\u0436\u0438\u043c";
+  if (themeToggle) {
+    themeToggle.textContent = state.theme === "dark" ? "◑" : "◐";
+    themeToggle.title = state.theme === "dark" ? "Бело-черный режим" : "Черно-белый режим";
+  }
+  renderSettings();
+}
+
+function t(key) {
+  const dictionary = {
+    songs: ["Songs", "\u041f\u0435\u0441\u043d\u0438"],
+    favorites: ["Favorites", "\u0418\u0437\u0431\u0440\u0430\u043d\u043d\u043e\u0435"],
+    playlists: ["Playlists", "\u041f\u043b\u0435\u0439\u043b\u0438\u0441\u0442\u044b"],
+    genres: ["Genres", "\u0416\u0430\u043d\u0440\u044b"],
+    artists: ["Artists", "\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u0438"],
+    albums: ["Albums", "\u0410\u043b\u044c\u0431\u043e\u043c\u044b"],
+    settings: ["Settings", "\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438"],
+    theme: ["Theme", "\u0422\u0435\u043c\u0430"],
+    light: ["Light", "\u0421\u0432\u0435\u0442\u043b\u0430\u044f"],
+    dark: ["Dark", "\u0422\u0435\u043c\u043d\u0430\u044f"],
+    language: ["Language", "\u042f\u0437\u044b\u043a"],
+    deleteSongs: ["Delete all songs from app", "\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0432\u0441\u0435 \u043f\u0435\u0441\u043d\u0438 \u0438\u0437 \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u044f"],
+    filesStay: ["Files on the computer are not deleted", "\u0424\u0430\u0439\u043b\u044b \u043d\u0430 \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u0435 \u043d\u0435 \u0443\u0434\u0430\u043b\u044f\u044e\u0442\u0441\u044f"],
+    deletePlaylists: ["Delete all playlists", "\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0432\u0441\u0435 \u043f\u043b\u0435\u0439\u043b\u0438\u0441\u0442\u044b"],
+    songsStay: ["Songs stay in the library", "\u041f\u0435\u0441\u043d\u0438 \u043e\u0441\u0442\u0430\u043d\u0443\u0442\u0441\u044f \u0432 \u0431\u0438\u0431\u043b\u0438\u043e\u0442\u0435\u043a\u0435"],
+    addAudio: ["Add MP3 or another audio file", "\u0414\u043e\u0431\u0430\u0432\u044c\u0442\u0435 MP3 \u0438\u043b\u0438 \u0434\u0440\u0443\u0433\u043e\u0439 \u0430\u0443\u0434\u0438\u043e\u0444\u0430\u0439\u043b"],
+    addAudioHint: ["Press plus and choose music on the device.", "\u041d\u0430\u0436\u043c\u0438\u0442\u0435 \u043f\u043b\u044e\u0441 \u0438 \u0432\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u043c\u0443\u0437\u044b\u043a\u0443 \u043d\u0430 \u0442\u0435\u043b\u0435\u0444\u043e\u043d\u0435."],
+    searchSong: ["Search song", "\u041f\u043e\u0438\u0441\u043a \u043f\u0435\u0441\u043d\u0438"],
+    searchFavorite: ["Search favorites", "\u041f\u043e\u0438\u0441\u043a \u0432 \u0438\u0437\u0431\u0440\u0430\u043d\u043d\u043e\u043c"],
+    searchPlaylist: ["Search playlist", "\u041f\u043e\u0438\u0441\u043a \u043f\u043b\u0435\u0439\u043b\u0438\u0441\u0442\u0430"],
+    playlistName: ["Playlist name", "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u043f\u043b\u0435\u0439\u043b\u0438\u0441\u0442\u0430"],
+  };
+  const item = dictionary[key] || [key, key];
+  return state.language === "en" ? item[0] : item[1];
+}
+
+function applyLanguage() {
+  document.documentElement.lang = state.language === "en" ? "en" : "ru";
+  document.querySelectorAll(".pill").forEach((pill) => {
+    const label = t(pill.dataset.view);
+    if (label) pill.textContent = label;
+  });
+  document.querySelector("#songsView h2")?.replaceChildren(document.createTextNode(`${t("songs")} `), songCount);
+  const titleMap = {
+    favoritesView: "favorites",
+    playlistsView: "playlists",
+    genresView: "genres",
+    artistsView: "artists",
+    albumsView: "albums",
+    settingsView: "settings",
+  };
+  Object.entries(titleMap).forEach(([id, key]) => {
+    const heading = document.querySelector(`#${id} h2`);
+    if (heading) heading.textContent = t(key);
+  });
+  const emptyStrong = emptyState?.querySelector("strong");
+  const emptyText = emptyState?.querySelector("span");
+  if (emptyStrong) emptyStrong.textContent = t("addAudio");
+  if (emptyText) emptyText.textContent = t("addAudioHint");
+  if (searchInput) searchInput.placeholder = t("searchSong");
+  if (favoriteSearchInput) favoriteSearchInput.placeholder = t("searchFavorite");
+  if (playlistSearchInput) playlistSearchInput.placeholder = t("searchPlaylist");
+  if (playlistName) playlistName.placeholder = t("playlistName");
+  renderSettings();
 }
 
 function setPlayerOpen(open) {
@@ -257,6 +325,7 @@ async function readAudioTags(file) {
 function saveLibraryState() {
   localStorage.setItem("favorites", JSON.stringify([...state.favorites]));
   localStorage.setItem("playlists", JSON.stringify(state.playlists));
+  localStorage.setItem("language", state.language);
 }
 
 function makeId() {
@@ -314,6 +383,15 @@ async function saveSong(song) {
       waveform: song.waveform,
       waveformVersion: WAVEFORM_VERSION,
     });
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function clearSongRecords() {
+  const db = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const request = db.transaction(DB_STORE, "readwrite").objectStore(DB_STORE).clear();
     request.onsuccess = () => resolve();
     request.onerror = () => reject(request.error);
   });
@@ -558,6 +636,84 @@ async function deleteSongFromApp(songId) {
 
   saveLibraryState();
   await deleteSongRecord(songId).catch(() => {});
+  render();
+}
+
+
+function renderSettings() {
+  if (!settingsThemeValue || !settingsThemeToggle) return;
+  const dark = state.theme === "dark";
+  const rows = document.querySelectorAll("#settingsView .settings-row");
+  rows[0]?.querySelector(".settings-title") && (rows[0].querySelector(".settings-title").textContent = t("theme"));
+  rows[1]?.querySelector(".settings-title") && (rows[1].querySelector(".settings-title").textContent = t("language"));
+  rows[3]?.querySelector(".settings-title") && (rows[3].querySelector(".settings-title").textContent = t("deleteSongs"));
+  rows[3]?.querySelector(".settings-value") && (rows[3].querySelector(".settings-value").textContent = t("filesStay"));
+  rows[4]?.querySelector(".settings-title") && (rows[4].querySelector(".settings-title").textContent = t("deletePlaylists"));
+  rows[4]?.querySelector(".settings-value") && (rows[4].querySelector(".settings-value").textContent = t("songsStay"));
+  settingsThemeValue.textContent = dark ? t("dark") : t("light");
+  settingsThemeToggle.title = dark ? "Switch to light theme" : "Switch to dark theme";
+  languageEnglish?.classList.toggle("active", state.language === "en");
+  languageRussian?.classList.toggle("active", state.language !== "en");
+}
+
+function setTheme(nextTheme) {
+  state.theme = nextTheme || (state.theme === "dark" ? "light" : "dark");
+  localStorage.setItem("theme", state.theme);
+  applyTheme();
+}
+
+function setLanguage(language) {
+  state.language = language === "en" ? "en" : "ru";
+  localStorage.setItem("language", state.language);
+  applyLanguage();
+}
+
+function requestDeleteAllSongs() {
+  openConfirmDialog(
+    state.language === "en" ? "Delete all songs?" : "\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0432\u0441\u0435 \u043f\u0435\u0441\u043d\u0438?",
+    state.language === "en" ? "Songs disappear only from the app. Files on the computer are not deleted." : "\u041f\u0435\u0441\u043d\u0438 \u0438\u0441\u0447\u0435\u0437\u043d\u0443\u0442 \u0442\u043e\u043b\u044c\u043a\u043e \u0438\u0437 \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u044f. \u0424\u0430\u0439\u043b\u044b \u043d\u0430 \u043a\u043e\u043c\u043f\u044c\u044e\u0442\u0435\u0440\u0435 \u043d\u0435 \u0443\u0434\u0430\u043b\u044f\u0442\u0441\u044f.",
+    deleteAllSongsFromApp
+  );
+}
+
+async function deleteAllSongsFromApp() {
+  audio.pause();
+  audio.removeAttribute("src");
+  audio.load();
+  state.songs.forEach((song) => {
+    if (song.url) URL.revokeObjectURL(song.url);
+    if (song.coverUrl) URL.revokeObjectURL(song.coverUrl);
+  });
+  state.songs = [];
+  state.favorites.clear();
+  state.playlists.forEach((playlist) => { playlist.songIds = []; });
+  state.queue = [];
+  state.currentIndex = -1;
+  state.pendingFavoriteIds.clear();
+  state.pendingPlaylistIds.clear();
+  state.groupDetailSongs = [];
+  setPlayerOpen(false);
+  saveLibraryState();
+  await clearSongRecords().catch(() => {});
+  render();
+}
+
+function requestDeleteAllPlaylists() {
+  openConfirmDialog(
+    state.language === "en" ? "Delete all playlists?" : "\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0432\u0441\u0435 \u043f\u043b\u0435\u0439\u043b\u0438\u0441\u0442\u044b?",
+    state.language === "en" ? "Songs stay in the library." : "\u041f\u0435\u0441\u043d\u0438 \u043e\u0441\u0442\u0430\u043d\u0443\u0442\u0441\u044f \u0432 \u0431\u0438\u0431\u043b\u0438\u043e\u0442\u0435\u043a\u0435.",
+    deleteAllPlaylists
+  );
+}
+
+function deleteAllPlaylists() {
+  state.playlists = [];
+  state.editingPlaylistId = null;
+  state.viewingPlaylistId = null;
+  state.pendingPlaylistIds.clear();
+  closePanel(playlistAddPanel);
+  closePanel(playlistDetailPanel);
+  saveLibraryState();
   render();
 }
 
@@ -1054,6 +1210,7 @@ function render() {
   renderQueue();
   renderPlaylists();
   renderGroups();
+  renderSettings();
   renderTimer();
   renderSeek();
   if (favoriteAddPanel.classList.contains("open")) renderFavoriteAddList();
@@ -1411,11 +1568,12 @@ document.querySelector("#closePlayer").addEventListener("click", () => {
   setPlayerOpen(false);
 });
 
-themeToggle.addEventListener("click", () => {
-  state.theme = state.theme === "dark" ? "light" : "dark";
-  localStorage.setItem("theme", state.theme);
-  applyTheme();
-});
+themeToggle?.addEventListener("click", () => setTheme());
+settingsThemeToggle?.addEventListener("click", () => setTheme());
+languageEnglish?.addEventListener("click", () => setLanguage("en"));
+languageRussian?.addEventListener("click", () => setLanguage("ru"));
+deleteAllSongsButton?.addEventListener("click", requestDeleteAllSongs);
+deleteAllPlaylistsButton?.addEventListener("click", requestDeleteAllPlaylists);
 
 document.querySelector("#queueButton").addEventListener("click", () => openPanel(queuePanel));
 document.querySelector("#closeQueue").addEventListener("click", () => closePanel(queuePanel));
@@ -1489,6 +1647,7 @@ audio.addEventListener("loadedmetadata", () => {
 });
 
 applyTheme();
+applyLanguage();
 setInterval(renderTimer, 1000);
 setupInfiniteToolbar();
 loadSavedSongs()

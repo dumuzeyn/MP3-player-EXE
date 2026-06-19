@@ -1073,3 +1073,79 @@ button,
 .cover-art {
   border-radius: 12px;
 }
+
+
+.settings-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.settings-title {
+  min-width: 0;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.settings-value {
+  flex: 0 1 auto;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: right;
+}
+
+.settings-language {
+  align-items: stretch;
+  flex-direction: column;
+  cursor: default;
+}
+
+.settings-choice-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.settings-choice-row button {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.settings-choice-row button.active {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
+.danger-settings .settings-title {
+  color: var(--text);
+}
+
+.danger-settings .settings-value {
+  color: var(--muted);
+}

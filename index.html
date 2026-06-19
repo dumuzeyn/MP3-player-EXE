@@ -16,7 +16,7 @@
           <img class="brand-icon" src="icon.svg" alt="" aria-hidden="true" />
           <p class="eyebrow">MP3 Player</p>
         </div>
-        <button id="themeToggle" class="icon-button theme-toggle" title="&#1055;&#1077;&#1088;&#1077;&#1082;&#1083;&#1102;&#1095;&#1080;&#1090;&#1100; &#1090;&#1077;&#1084;&#1091;">&#9680;</button>
+        <button id="themeToggle" class="icon-button theme-toggle" title="&#1055;&#1077;&#1088;&#1077;&#1082;&#1083;&#1102;&#1095;&#1080;&#1090;&#1100; &#1090;&#1077;&#1084;&#1091;" hidden>&#9680;</button>
       </header>
 
       <main class="content">
@@ -27,6 +27,7 @@
           <button class="pill" data-view="genres">&#1046;&#1072;&#1085;&#1088;&#1099;</button>
           <button class="pill" data-view="artists">&#1048;&#1089;&#1087;&#1086;&#1083;&#1085;&#1080;&#1090;&#1077;&#1083;&#1080;</button>
           <button class="pill" data-view="albums">&#1040;&#1083;&#1100;&#1073;&#1086;&#1084;&#1099;</button>
+          <button class="pill" data-view="settings">&#1053;&#1072;&#1089;&#1090;&#1088;&#1086;&#1081;&#1082;&#1080;</button>
           <input id="fileInput" type="file" accept="audio/*" multiple hidden />
         </section>
 
@@ -97,6 +98,37 @@
         <section id="albumsView" class="view">
           <div class="section-title"><h2>&#1040;&#1083;&#1100;&#1073;&#1086;&#1084;&#1099;</h2></div>
           <div id="albumList" class="group-list"></div>
+        </section>
+
+        <section id="settingsView" class="view">
+          <div class="section-title">
+            <h2>&#1053;&#1072;&#1089;&#1090;&#1088;&#1086;&#1081;&#1082;&#1080;</h2>
+          </div>
+          <div class="settings-list">
+            <button id="settingsThemeToggle" class="settings-row" type="button">
+              <span class="settings-title">&#1058;&#1077;&#1084;&#1072;</span>
+              <span id="settingsThemeValue" class="settings-value">&#1057;&#1074;&#1077;&#1090;&#1083;&#1072;&#1103;</span>
+            </button>
+            <div class="settings-row settings-language">
+              <span class="settings-title">&#1071;&#1079;&#1099;&#1082;</span>
+              <div class="settings-choice-row">
+                <button id="languageEnglish" type="button">English</button>
+                <button id="languageRussian" type="button">&#1056;&#1091;&#1089;&#1089;&#1082;&#1080;&#1081;</button>
+              </div>
+            </div>
+            <a class="settings-row" href="https://github.com/dumuzeyn/MP3-player" target="_blank" rel="noreferrer">
+              <span class="settings-title">GitHub</span>
+              <span class="settings-value">dumuzeyn/MP3-player</span>
+            </a>
+            <button id="deleteAllSongsButton" class="settings-row danger-settings" type="button">
+              <span class="settings-title">&#1059;&#1076;&#1072;&#1083;&#1080;&#1090;&#1100; &#1074;&#1089;&#1077; &#1087;&#1077;&#1089;&#1085;&#1080; &#1080;&#1079; &#1087;&#1088;&#1080;&#1083;&#1086;&#1078;&#1077;&#1085;&#1080;&#1103;</span>
+              <span class="settings-value">&#1060;&#1072;&#1081;&#1083;&#1099; &#1085;&#1072; &#1091;&#1089;&#1090;&#1088;&#1086;&#1081;&#1089;&#1090;&#1074;&#1077; &#1085;&#1077; &#1091;&#1076;&#1072;&#1083;&#1103;&#1102;&#1090;&#1089;&#1103;</span>
+            </button>
+            <button id="deleteAllPlaylistsButton" class="settings-row danger-settings" type="button">
+              <span class="settings-title">&#1059;&#1076;&#1072;&#1083;&#1080;&#1090;&#1100; &#1074;&#1089;&#1077; &#1087;&#1083;&#1077;&#1081;&#1083;&#1080;&#1089;&#1090;&#1099;</span>
+              <span class="settings-value">&#1055;&#1077;&#1089;&#1085;&#1080; &#1086;&#1089;&#1090;&#1072;&#1085;&#1091;&#1090;&#1089;&#1103; &#1074; &#1073;&#1080;&#1073;&#1083;&#1080;&#1086;&#1090;&#1077;&#1082;&#1077;</span>
+            </button>
+          </div>
         </section>
       </main>
 
