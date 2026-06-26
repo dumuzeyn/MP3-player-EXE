@@ -92,10 +92,53 @@ const DB_NAME = "mp3-player-library";
 const DB_STORE = "songs";
 const WAVEFORM_VERSION = 4;
 
+function storageGet(key, fallback = "") {
+  try {
+    const value = localStorage.getItem(key);
+    return value === null ? fallback : value;
+  } catch {
+    return fallback;
+  }
+}
+
+function storageSet(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {}
+}
+
+function storageJsonArray(key) {
+  try {
+    const value = JSON.parse(storageGet(key, "[]"));
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+}
+
+function storageChoice(key, allowed, fallback) {
+  const value = storageGet(key, fallback);
+  return allowed.includes(value) ? value : fallback;
+}
+
+function savedFavorites() {
+  return storageJsonArray("favorites").map(String).filter(Boolean);
+}
+
+function savedPlaylists() {
+  return storageJsonArray("playlists")
+    .filter((playlist) => playlist && typeof playlist === "object")
+    .map((playlist, index) => ({
+      id: String(playlist.id || `playlist-${index}`),
+      name: String(playlist.name || `\u041f\u043b\u0435\u0439\u043b\u0438\u0441\u0442 ${index + 1}`),
+      songIds: Array.isArray(playlist.songIds) ? playlist.songIds.map(String).filter(Boolean) : [],
+    }));
+}
+
 const state = {
   songs: [],
-  favorites: new Set(JSON.parse(localStorage.getItem("favorites") || "[]")),
-  playlists: JSON.parse(localStorage.getItem("playlists") || "[]"),
+  favorites: new Set(savedFavorites()),
+  playlists: savedPlaylists(),
   queue: [],
   currentIndex: -1,
   loopMode: "off",
@@ -113,9 +156,9 @@ const state = {
   actionSongId: null,
   playlistTargetSongId: null,
   stopAfterCurrent: false,
-  theme: localStorage.getItem("theme") || "light",
-  language: localStorage.getItem("language") || "ru",
-  activeView: viewNames.includes(localStorage.getItem("activeView")) ? localStorage.getItem("activeView") : "songs",
+  theme: storageChoice("theme", ["light", "dark"], "light"),
+  language: storageChoice("language", ["ru", "en"], "ru"),
+  activeView: storageChoice("activeView", viewNames, "songs"),
 };
 
 let pendingConfirmAction = null;
@@ -364,9 +407,9 @@ async function readAudioTags(file) {
 }
 
 function saveLibraryState() {
-  localStorage.setItem("favorites", JSON.stringify([...state.favorites]));
-  localStorage.setItem("playlists", JSON.stringify(state.playlists));
-  localStorage.setItem("language", state.language);
+  storageSet("favorites", JSON.stringify([...state.favorites]));
+  storageSet("playlists", JSON.stringify(state.playlists));
+  storageSet("language", state.language);
 }
 
 function makeId() {
@@ -733,14 +776,14 @@ function renderSettings() {
 
 function setTheme(nextTheme) {
   state.theme = nextTheme || (state.theme === "dark" ? "light" : "dark");
-  localStorage.setItem("theme", state.theme);
+  storageSet("theme", state.theme);
   applyTheme();
   scheduleViewPagerHeightUpdate();
 }
 
 function setLanguage(language) {
   state.language = language === "en" ? "en" : "ru";
-  localStorage.setItem("language", state.language);
+  storageSet("language", state.language);
   applyLanguage();
   scheduleViewPagerHeightUpdate();
 }
@@ -1509,7 +1552,7 @@ playlistDetailAddButton.addEventListener("click", () => {
 function selectView(viewName, options = {}) {
   if (!viewNames.includes(viewName)) return;
   state.activeView = viewName;
-  localStorage.setItem("activeView", viewName);
+  storageSet("activeView", viewName);
   document.querySelectorAll(".pill").forEach((tab) => tab.classList.toggle("active", tab.dataset.view === viewName));
   document.querySelectorAll(".view").forEach((view) => {
     const active = view.id === `${viewName}View`;
