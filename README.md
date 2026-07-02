@@ -6,13 +6,13 @@ The app plays audio files selected from the computer, stores the music library l
 
 ## Download
 
-The regular build creates the desktop app in the `dist` folder:
+The regular build creates one portable Windows `.exe` in the `dist` folder:
 
 ```text
-dist/win-unpacked/MP3 Player.exe
+dist/MP3-Player-1.0.0-portable.exe
 ```
 
-Keep the whole `win-unpacked` folder together and launch `MP3 Player.exe`.
+Download that single file and launch it. No browser, local server, VBS script, or extra app folder is required.
 
 ## Features
 
@@ -47,10 +47,10 @@ Build Windows `.exe` files:
 pnpm dist
 ```
 
-Build optional installer and portable artifacts:
+Build an unpacked app folder for debugging:
 
 ```bash
-pnpm dist:installer
+pnpm dist:folder
 ```
 
 ## Project Files
@@ -84,13 +84,13 @@ MP3 Player EXE - локальный музыкальный плеер для Win
 
 ## Скачать
 
-Обычная сборка создаёт desktop-приложение в папке `dist`:
+Обычная сборка создаёт один portable `.exe` файл в папке `dist`:
 
 ```text
-dist/win-unpacked/MP3 Player.exe
+dist/MP3-Player-1.0.0-portable.exe
 ```
 
-Держите всю папку `win-unpacked` вместе и запускайте `MP3 Player.exe`.
+Пользователь скачивает только этот файл и запускает его. Браузер, локальный сервер, VBS-скрипт и отдельная папка приложения не нужны.
 
 ## Возможности
 
@@ -125,10 +125,10 @@ pnpm start
 pnpm dist
 ```
 
-Собрать дополнительные installer и portable артефакты:
+Собрать распакованную папку приложения для проверки:
 
 ```bash
-pnpm dist:installer
+pnpm dist:folder
 ```
 
 ## Файлы проекта

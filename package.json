@@ -7,8 +7,9 @@
   "license": "MIT",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win --dir",
-    "dist:installer": "electron-builder --win portable nsis"
+    "dist": "electron-builder --win portable",
+    "dist:folder": "electron-builder --win --dir",
+    "dist:installer": "electron-builder --win nsis"
   },
   "build": {
     "appId": "com.dumuzeyn.mp3player.exe",
@@ -22,13 +23,13 @@
       "index.html",
       "main.js",
       "package.json",
+      "preload.js",
       "styles.css"
     ],
     "win": {
       "signAndEditExecutable": false,
       "target": [
-        "portable",
-        "nsis"
+        "portable"
       ]
     },
     "portable": {

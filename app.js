@@ -1366,13 +1366,36 @@ async function importSongs(files) {
   render();
 }
 
-fileInput.addEventListener("change", async () => {
+function nativeRecordToFile(record) {
+  return new File([record.data], record.name, {
+    type: record.type,
+    lastModified: Math.round(record.lastModified),
+  });
+}
+
+async function chooseAndImportSongs() {
+  if (window.mp3PlayerNative?.selectAudioFiles) {
+    try {
+      const records = await window.mp3PlayerNative.selectAudioFiles();
+      if (records.length) {
+        await importSongs(records.map(nativeRecordToFile));
+      }
+      return;
+    } catch (error) {
+      console.error("Native audio picker failed", error);
+    }
+  }
+
+  fileInput?.click();
+}
+
+fileInput?.addEventListener("change", async () => {
   await importSongs([...fileInput.files]);
   fileInput.value = "";
 });
 
 addMusicButton.addEventListener("click", () => {
-  fileInput.click();
+  chooseAndImportSongs().catch(() => {});
 });
 
 searchToggle.addEventListener("click", () => {
