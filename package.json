@@ -1,0 +1,48 @@
+{
+  "name": "mp3-player-exe",
+  "version": "1.0.0",
+  "description": "Desktop MP3 player for Windows packaged as an EXE app.",
+  "main": "main.js",
+  "author": "dumuzeyn",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --dir",
+    "dist:installer": "electron-builder --win portable nsis"
+  },
+  "build": {
+    "appId": "com.dumuzeyn.mp3player.exe",
+    "productName": "MP3 Player",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "app.js",
+      "icon.svg",
+      "index.html",
+      "main.js",
+      "package.json",
+      "styles.css"
+    ],
+    "win": {
+      "signAndEditExecutable": false,
+      "target": [
+        "portable",
+        "nsis"
+      ]
+    },
+    "portable": {
+      "artifactName": "MP3-Player-${version}-portable.exe"
+    },
+    "nsis": {
+      "artifactName": "MP3-Player-Setup-${version}.exe",
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  }
+}
