@@ -93,6 +93,8 @@ const viewNames = [...document.querySelectorAll(".pill:not(.tab-clone)")].map((t
 const DB_NAME = "mp3-player-library";
 const DB_STORE = "songs";
 const WAVEFORM_VERSION = 4;
+const nextSongPreloader = new Audio();
+nextSongPreloader.preload = "auto";
 
 function storageGet(key, fallback = "") {
   try {
@@ -697,22 +699,31 @@ function setQueue(songs, startId) {
   state.currentIndex = Math.max(0, songs.findIndex((song) => song.id === startId));
 }
 
+function updateSongRowState(row, isCurrent, isPlaying) {
+  row.classList.toggle("playing", isCurrent);
+  row.querySelectorAll(".play-now, .play-preview").forEach((button) => {
+    button.classList.toggle("pause-now", isPlaying);
+    button.textContent = isPlaying ? "II" : "\u25b6";
+    button.title = isPlaying ? "\u041f\u0430\u0443\u0437\u0430" : "\u0418\u0433\u0440\u0430\u0442\u044c";
+  });
+}
+
 function renderPlaybackState() {
   const currentId = currentSong()?.id || "";
-  document.querySelectorAll(".song-row[data-song-id]").forEach((row) => {
+  document.querySelectorAll(".song-row.playing").forEach((row) => {
     const isCurrent = row.dataset.songId === currentId;
-    const isPlaying = isCurrent && !audio.paused;
-    row.classList.toggle("playing", isCurrent);
-    row.querySelectorAll(".play-now, .play-preview").forEach((button) => {
-      button.classList.toggle("pause-now", isPlaying);
-      button.textContent = isPlaying ? "II" : "\u25b6";
-      button.title = isPlaying ? "\u041f\u0430\u0443\u0437\u0430" : "\u0418\u0433\u0440\u0430\u0442\u044c";
-    });
+    updateSongRowState(row, isCurrent, false);
   });
+
+  if (currentId) {
+    document
+      .querySelectorAll(`.song-row[data-song-id="${CSS.escape(currentId)}"]`)
+      .forEach((row) => updateSongRowState(row, true, !audio.paused));
+  }
+
   renderPlayer();
   renderSeek();
   if (queuePanel.classList.contains("open")) renderQueue();
-  scheduleViewPagerHeightUpdate();
 }
 
 function playSong(song, queue = state.songs, openPlayer = false) {
@@ -739,11 +750,14 @@ function playOrPauseSong(song, queue) {
 
 function openSongPlayer(song, queue) {
   const isCurrent = currentSong()?.id === song.id;
-  if (!isCurrent) playSong(song, queue, true);
-  else {
-    setPlayerOpen(true);
-    render();
+  if (!isCurrent) {
+    playSong(song, queue, true);
+    return;
   }
+
+  setPlayerOpen(true);
+  renderPlayer();
+  renderSeek();
 }
 
 function togglePlay() {
@@ -796,6 +810,15 @@ function playPrevious() {
   audio.src = song.url;
   audio.play().catch(() => renderPlaybackState());
   renderPlaybackState();
+}
+
+function preloadNextSong() {
+  if (!state.queue.length || state.currentIndex < 0) return;
+  const nextIndex = state.currentIndex >= state.queue.length - 1 ? 0 : state.currentIndex + 1;
+  const nextSong = state.queue[nextIndex];
+  if (!nextSong?.url || nextSong.url === nextSongPreloader.src) return;
+  nextSongPreloader.src = nextSong.url;
+  nextSongPreloader.load();
 }
 
 function toggleFavorite(songId) {
@@ -1211,6 +1234,13 @@ function emptyMessage(text) {
   return li;
 }
 
+function updateCover(container, song) {
+  if (!container || !song) return;
+  if (container.dataset.songId === song.id) return;
+  container.dataset.songId = song.id;
+  container.innerHTML = coverHtml(song);
+}
+
 function renderPlayer() {
   const song = currentSong();
   if (!song) {
@@ -1220,8 +1250,8 @@ function renderPlayer() {
   }
   playerTitle.textContent = song.title;
   playerSubtitle.textContent = `${song.artist} \u2022 ${state.currentIndex + 1} \u0438\u0437 ${state.queue.length}`;
-  coverArt.innerHTML = coverHtml(song);
-  miniCover.innerHTML = coverHtml(song);
+  updateCover(coverArt, song);
+  updateCover(miniCover, song);
   miniTitle.textContent = song.title;
   miniArtist.textContent = audio.paused ? `${song.artist} \u2022 \u043f\u0430\u0443\u0437\u0430` : song.artist;
   miniState.textContent = audio.paused ? "\u25b6" : "II";
@@ -1531,7 +1561,7 @@ function render() {
   renderToolbar();
   renderActiveViewContent();
   renderPlayer();
-  renderQueue();
+  if (queuePanel.classList.contains("open")) renderQueue();
   renderTimer();
   renderSeek();
   setViewTrackTransform();
@@ -2081,7 +2111,6 @@ miniPlayer.addEventListener("click", () => {
 miniState.addEventListener("click", (event) => {
   event.stopPropagation();
   togglePlay();
-  render();
 });
 
 document.querySelector("#closePlayer").addEventListener("click", () => {
@@ -2094,7 +2123,10 @@ languageSelect?.addEventListener("change", () => setLanguage(languageSelect.valu
 deleteAllSongsButton?.addEventListener("click", requestDeleteAllSongs);
 deleteAllPlaylistsButton?.addEventListener("click", requestDeleteAllPlaylists);
 
-document.querySelector("#queueButton").addEventListener("click", () => openPanel(queuePanel));
+document.querySelector("#queueButton").addEventListener("click", () => {
+  renderQueue();
+  openPanel(queuePanel);
+});
 document.querySelector("#closeQueue").addEventListener("click", () => closePanel(queuePanel));
 document.querySelector("#timerButton").addEventListener("click", () => openPanel(timerPanel));
 document.querySelector("#closeTimer").addEventListener("click", () => closePanel(timerPanel));
@@ -2154,16 +2186,23 @@ customTimerInput.addEventListener("keydown", (event) => {
 });
 
 audio.addEventListener("play", renderPlaybackState);
+audio.addEventListener("playing", preloadNextSong);
 audio.addEventListener("pause", renderPlaybackState);
 audio.addEventListener("ended", playNext);
 audio.addEventListener("timeupdate", renderSeek);
 audio.addEventListener("loadedmetadata", () => {
   const song = currentSong();
-  if (song) {
-    song.duration = audio.duration;
-    saveSong(song);
+  if (song && Number.isFinite(audio.duration)) {
+    const newDuration = audio.duration;
+    const durationChanged = Math.abs((song.duration || 0) - newDuration) > 0.5;
+    if (durationChanged) {
+      song.duration = newDuration;
+      saveSong(song).catch((error) => {
+        console.error("Failed to save song duration:", error);
+      });
+    }
   }
-  render();
+  renderSeek();
 });
 
 setupMediaSessionControls();

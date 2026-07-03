@@ -1467,3 +1467,11 @@ body.theme-dark .mini-player {
     transition-duration: 1ms !important;
   }
 }
+
+/* Full player: show cover art completely without changing small list covers. */
+.cover-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
