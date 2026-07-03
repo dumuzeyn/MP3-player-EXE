@@ -169,6 +169,21 @@ const state = {
 let pendingConfirmAction = null;
 let sortedSongsCache = { signature: "", songs: [] };
 let refreshViewClones = () => {};
+let viewContentVersion = 0;
+const renderedViewVersions = new Map();
+
+function invalidateRenderedViews() {
+  viewContentVersion += 1;
+  renderedViewVersions.clear();
+}
+
+function markViewRendered(viewName) {
+  renderedViewVersions.set(viewName, viewContentVersion);
+}
+
+function isViewRendered(viewName) {
+  return renderedViewVersions.get(viewName) === viewContentVersion;
+}
 
 const loopText = {
   off: "\u0412\u044b\u043a\u043b",
@@ -242,6 +257,7 @@ function applyLanguage() {
   if (playlistSearchInput) playlistSearchInput.placeholder = t("searchPlaylist");
   if (playlistAddSearchInput) playlistAddSearchInput.placeholder = t("searchSong");
   if (playlistName) playlistName.placeholder = t("playlistName");
+  refreshViewClones();
   renderSettings();
 }
 
@@ -434,6 +450,7 @@ async function readAudioTags(file) {
 }
 
 function saveLibraryState() {
+  invalidateRenderedViews();
   storageSet("favorites", JSON.stringify([...state.favorites]));
   storageSet("playlists", JSON.stringify(state.playlists));
   storageSet("language", state.language);
@@ -910,6 +927,7 @@ function renderSettings() {
   settingsThemeValue.textContent = dark ? t("dark") : t("light");
   settingsThemeToggle.title = dark ? "Switch to light theme" : "Switch to dark theme";
   if (languageSelect) languageSelect.value = state.language;
+  markViewRendered("settings");
 }
 
 function setTheme(nextTheme) {
@@ -921,6 +939,7 @@ function setTheme(nextTheme) {
 
 function setLanguage(language) {
   state.language = language === "en" ? "en" : "ru";
+  invalidateRenderedViews();
   storageSet("language", state.language);
   applyLanguage();
   scheduleViewPagerHeightUpdate();
@@ -1191,7 +1210,7 @@ function renderFavoriteAddRow(song) {
   return renderSelectableSongRow(song, state.pendingFavoriteIds, "\u2665", sortedSongs());
 }
 
-function renderSongs() {
+function renderSongLibrary() {
   emptyState.hidden = state.songs.length > 0;
   const songs = visibleSongs();
   songCount.textContent = state.songs.length;
@@ -1204,7 +1223,10 @@ function renderSongs() {
         ? [emptyMessage("\u041f\u043e \u044d\u0442\u043e\u043c\u0443 \u0437\u0430\u043f\u0440\u043e\u0441\u0443 \u043f\u0435\u0441\u0435\u043d \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e.")]
         : [])
   );
+  markViewRendered("songs");
+}
 
+function renderFavorites() {
   const favorites = favoriteSongs();
   favoritePlayAllButton.disabled = favorites.length === 0;
   favoriteShuffleButton.disabled = favorites.length === 0;
@@ -1213,7 +1235,12 @@ function renderSongs() {
       ? favorites.map((song) => renderSongRow(song, favorites, false, { favoriteOnly: true }))
       : [emptyMessage(state.favorites.size ? "\u041f\u043e \u044d\u0442\u043e\u043c\u0443 \u0437\u0430\u043f\u0440\u043e\u0441\u0443 \u0432 \u0438\u0437\u0431\u0440\u0430\u043d\u043d\u043e\u043c \u043d\u0438\u0447\u0435\u0433\u043e \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e." : "\u041b\u044e\u0431\u0438\u043c\u044b\u0435 \u043f\u0435\u0441\u043d\u0438 \u043f\u043e\u044f\u0432\u044f\u0442\u0441\u044f \u0437\u0434\u0435\u0441\u044c \u043f\u043e\u0441\u043b\u0435 \u043d\u0430\u0436\u0430\u0442\u0438\u044f \u043d\u0430 \u043b\u0430\u0439\u043a.")])
   );
+  markViewRendered("favorites");
+}
 
+function renderSongs() {
+  renderSongLibrary();
+  renderFavorites();
 }
 
 function renderFavoriteAddList() {
@@ -1284,6 +1311,7 @@ function renderPlaylists() {
   playlistList.replaceChildren(
     ...(playlists.length ? playlists.map(renderPlaylist) : [emptyPlaylist(query ? "\u041f\u043b\u0435\u0439\u043b\u0438\u0441\u0442 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d." : undefined)])
   );
+  markViewRendered("playlists");
 }
 
 function groupSongsBy(field) {
@@ -1346,6 +1374,9 @@ function renderGroups() {
   albumList.replaceChildren(
     ...(albums.length ? albums.map(([name, songs]) => renderGroupCard(name, songs)) : [emptyMessage("\u0410\u043b\u044c\u0431\u043e\u043c\u044b \u043f\u043e\u044f\u0432\u044f\u0442\u0441\u044f \u043f\u043e\u0441\u043b\u0435 \u0434\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u0438\u044f \u043f\u0435\u0441\u0435\u043d.")])
   );
+  markViewRendered("genres");
+  markViewRendered("artists");
+  markViewRendered("albums");
 }
 
 function renderToolbar() {
@@ -1551,7 +1582,9 @@ function renderSeek() {
 }
 
 function renderActiveViewContent() {
-  if (state.activeView === "songs" || state.activeView === "favorites") renderSongs();
+  if (isViewRendered(state.activeView)) return;
+  if (state.activeView === "songs") renderSongLibrary();
+  else if (state.activeView === "favorites") renderFavorites();
   else if (state.activeView === "playlists") renderPlaylists();
   else if (state.activeView === "genres" || state.activeView === "artists" || state.activeView === "albums") renderGroups();
   else if (state.activeView === "settings") renderSettings();
@@ -1587,12 +1620,14 @@ async function importSongs(files) {
     newSongs.push(song);
 
     if (newSongs.length % 6 === 0) {
+      invalidateRenderedViews();
       render();
       await waitForFrame();
     }
   }
 
   await Promise.allSettled(newSongs.map(saveSong));
+  if (newSongs.length) invalidateRenderedViews();
   render();
 }
 
@@ -1610,6 +1645,7 @@ async function importNativeRecords(records) {
     newSongs.push(song);
 
     if (newSongs.length % 50 === 0) {
+      invalidateRenderedViews();
       render();
       await waitForFrame();
     }
@@ -1618,6 +1654,7 @@ async function importNativeRecords(records) {
   for (const song of newSongs) {
     await saveSong(song).catch(() => {});
   }
+  if (newSongs.length) invalidateRenderedViews();
   render();
 }
 
@@ -1677,7 +1714,9 @@ searchToggle.addEventListener("click", () => {
 
 searchInput.addEventListener("input", () => {
   state.searchQuery = searchInput.value;
-  renderSongs();
+  renderSongLibrary();
+  renderPlaybackState();
+  scheduleViewPagerHeightUpdate();
 });
 
 favoriteSearchToggle.addEventListener("click", () => {
@@ -1688,7 +1727,9 @@ favoriteSearchToggle.addEventListener("click", () => {
 
 favoriteSearchInput.addEventListener("input", () => {
   state.favoriteSearchQuery = favoriteSearchInput.value;
-  renderSongs();
+  renderFavorites();
+  renderPlaybackState();
+  scheduleViewPagerHeightUpdate();
 });
 
 playlistSearchToggle.addEventListener("click", () => {
@@ -2007,36 +2048,23 @@ function setupInfiniteToolbar() {
 
 function setupViewPager() {
   if (!viewPager || !viewTrack) return;
-  const stripCloneIds = (clone) => {
-    clone.removeAttribute("id");
-    clone.querySelectorAll("[id]").forEach((element) => element.removeAttribute("id"));
-    clone.querySelectorAll("input, button, a, select, textarea").forEach((element) => {
-      element.tabIndex = -1;
-      element.setAttribute("aria-hidden", "true");
-    });
+  const makeClone = (viewName, className) => {
+    const clone = document.createElement("section");
+    clone.className = `view view-clone ${className}`;
+    clone.setAttribute("aria-hidden", "true");
+    clone.innerHTML = `<div class="view-clone-placeholder"><h2>${escapeHtml(t(viewName))}</h2></div>`;
+    return clone;
   };
 
   refreshViewClones = () => {
-    const settingsView = document.querySelector("#settingsView");
-    const songsView = document.querySelector("#songsView");
-    const beforeClone = viewTrack.querySelector(".view-clone-before");
-    const afterClone = viewTrack.querySelector(".view-clone-after");
-    if (settingsView && beforeClone) {
-      beforeClone.innerHTML = settingsView.innerHTML;
-      stripCloneIds(beforeClone);
-    }
-    if (songsView && afterClone) {
-      afterClone.innerHTML = songsView.innerHTML;
-      stripCloneIds(afterClone);
-    }
+    const beforeTitle = viewTrack.querySelector(".view-clone-before h2");
+    const afterTitle = viewTrack.querySelector(".view-clone-after h2");
+    if (beforeTitle) beforeTitle.textContent = t("settings");
+    if (afterTitle) afterTitle.textContent = t("songs");
   };
 
-  const settingsClone = document.querySelector("#settingsView").cloneNode(true);
-  settingsClone.className = "view view-clone view-clone-before";
-  stripCloneIds(settingsClone);
-  const songsClone = document.querySelector("#songsView").cloneNode(true);
-  songsClone.className = "view view-clone view-clone-after";
-  stripCloneIds(songsClone);
+  const settingsClone = makeClone("settings", "view-clone-before");
+  const songsClone = makeClone("songs", "view-clone-after");
   viewTrack.prepend(settingsClone);
   viewTrack.append(songsClone);
   refreshViewClones();
@@ -2215,6 +2243,7 @@ selectView(state.activeView, { skipTabScroll: true });
 loadSavedSongs()
   .then((songs) => {
     state.songs = songs;
+    invalidateRenderedViews();
     render();
   })
   .catch(() => render());

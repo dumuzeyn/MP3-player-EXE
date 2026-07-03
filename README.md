@@ -1,279 +1,263 @@
-# MP3 Player EXE
+# MP3 Player
 
-**MP3 Player EXE** - настольный MP3-плеер для Windows, собранный как самостоятельный `.exe` файл. Пользователю не нужен браузер, локальный сервер, VBS-скрипт или отдельная папка приложения: достаточно скачать и запустить один файл.
+**MP3 Player** - настольный музыкальный плеер для Windows. Приложение собирается в самостоятельный `.exe` файл: пользователь скачивает один файл, запускает его и слушает музыку без браузера, локального сервера и дополнительных папок.
 
 [English version](#english-version)
 
-## Скачать EXE
+<p>
+  <a href="https://github.com/dumuzeyn/MP3-player-EXE/raw/main/dist/MP3-Player-1.0.0-portable.exe">
+    <kbd><strong>Скачать MP3 Player для Windows (.exe)</strong></kbd>
+  </a>
+</p>
 
-[Скачать MP3-Player-1.0.0-portable.exe](https://github.com/dumuzeyn/MP3-player-EXE/raw/main/dist/MP3-Player-1.0.0-portable.exe)
-
-Локальный путь после сборки:
+Локальный файл после сборки находится здесь:
 
 ```text
 dist/MP3-Player-1.0.0-portable.exe
 ```
 
-Portable-версия при запуске временно распаковывает приложение в уникальную папку Windows Temp и запускает плеер оттуда. После закрытия временные файлы удаляются. Музыка и настройки остаются в локальном хранилище приложения.
+## Возможности
 
-## Что умеет приложение
+- Добавление музыки кнопкой `+` через системный выбор файлов Windows.
+- Добавление музыки перетаскиванием MP3-файлов прямо в окно приложения.
+- Принимаются только `.mp3`, чтобы случайные файлы не попадали в медиатеку.
+- Можно добавить большую пачку песен за раз; импорт идет порциями, чтобы интерфейс не зависал.
+- Песни запоминаются после перезапуска приложения.
+- Приложение хранит путь к исходному MP3-файлу, но не удаляет и не перезаписывает музыку пользователя.
+- Чтение ID3-метаданных: название, исполнитель, альбом, жанр и встроенная обложка.
+- Обложки показываются в списке песен, мини-плеере, большом плеере, жанрах, альбомах, исполнителях и плейлистах.
+- Разделы: `Песни`, `Избранное`, `Плейлисты`, `Жанры`, `Исполнители`, `Альбомы`, `Настройки`.
+- Поиск по песням, избранному и плейлистам.
+- Поиск песни во время добавления трека в плейлист.
+- Создание, открытие, наполнение, очистка и удаление плейлистов.
+- Быстрое воспроизведение всего списка или случайного порядка.
+- Большой плеер с обложкой, названием, исполнителем, прогрессом, временем, лайком, повтором и таймером сна.
+- Мини-плеер внизу окна показывает текущую песню, обложку и кнопку play/pause; клик по мини-плееру открывает большой режим.
+- Музыка продолжает играть после закрытия окна: приложение прячется в трей, откуда его можно открыть или полностью закрыть.
+- Поддержка системной медиапанели Windows через Media Session API: название, исполнитель, обложка, play/pause, next/previous и позиция трека.
+- Верхнее меню вкладок можно прокручивать и перетаскивать; оно закреплено сверху при вертикальной прокрутке страницы.
+- Светлая и темная тема.
+- Русский и английский интерфейс через выпадающий список языка.
 
-- Добавляет MP3-файлы с компьютера через кнопку `+`.
-- Поддерживает drag and drop: можно перетащить MP3-файлы прямо в окно приложения.
-- Принимает только `.mp3`, чтобы случайные файлы другого типа не попадали в медиатеку.
-- Может добавлять сразу большие пачки песен без чтения всего файла в память.
-- Запоминает добавленные песни после перезапуска приложения.
-- Хранит путь к исходному MP3-файлу, а не копирует музыку внутрь приложения.
-- Удаление песни из приложения удаляет только запись из медиатеки, а не сам файл на компьютере.
-- Читает ID3-метаданные: название, исполнитель, альбом, жанр и обложку, если они есть в MP3-файле.
-- Показывает обложки в списке песен, мини-плеере, большом плеере, группах и плейлистах.
-- Показывает песни в разделах `Песни`, `Избранное`, `Плейлисты`, `Жанры`, `Исполнители`, `Альбомы`, `Настройки`.
-- Поддерживает поиск по песням, избранному и плейлистам.
-- Поддерживает поиск песен во время добавления в плейлист.
-- Позволяет создавать, открывать, наполнять, очищать и удалять плейлисты.
-- В плейлистах видны обложки песен, количество треков и быстрые кнопки воспроизведения.
-- Позволяет добавлять песни в избранное и быстро открывать список избранного.
-- Есть режимы `играть все` и `перемешать`.
-- Есть очередь воспроизведения и переход к следующей/предыдущей песне.
-- Есть большой плеер с обложкой, названием, исполнителем, прогрессом, временем, лайком, повтором и таймером сна.
-- Есть мини-плеер внизу окна: он показывает текущую песню, обложку и кнопку play/pause.
-- Нажатие на мини-плеер открывает большой плеер.
-- Музыка продолжает играть при закрытии окна: приложение прячется в трей.
-- В трее можно открыть приложение или полностью выйти.
-- Поддерживается системная медиапанель Windows через Media Session API: название, исполнитель, обложка, play/pause, next/previous и позиция трека.
-- Есть светлая и темная тема.
-- Есть русский и английский интерфейс. Выбор языка сделан как выпадающий список, чтобы позже можно было добавить больше языков.
-- Верхнее меню можно прокручивать/тянуть, включая быстрый переход между крайними пунктами `Песни` и `Настройки`.
+## Скриншоты
 
-## Как работает хранение данных
+Пустая медиатека с кнопкой добавления и drag and drop:
 
-Приложение хранит медиатеку локально на компьютере пользователя:
+![Пустая медиатека](docs/screenshots/empty-library.png)
 
-- список песен и техническая информация сохраняются в IndexedDB Electron/Chromium;
-- избранное, плейлисты, язык, тема и активный раздел сохраняются в localStorage;
-- исходные MP3-файлы остаются там, где пользователь их выбрал;
-- приложение не загружает музыку в интернет;
-- если пользователь переместит или удалит MP3-файл вручную, запись может остаться в медиатеке, но старый путь больше не сможет воспроизводиться.
+Список песен с обложками, быстрыми кнопками и мини-плеером:
+
+![Список песен](docs/screenshots/songs-library.png)
+
+Большой плеер с полной обложкой, таймером, лайком, повтором и прогрессом:
+
+![Большой плеер](docs/screenshots/full-player.png)
+
+Плейлисты с обложками, количеством песен и быстрым запуском:
+
+![Плейлисты](docs/screenshots/playlists.png)
+
+Жанры, исполнители и альбомы собираются из метаданных MP3:
+
+![Жанры](docs/screenshots/genres.png)
+
+Настройки темы, языка, очистки медиатеки и ссылки на GitHub:
+
+![Настройки](docs/screenshots/settings.png)
+
+## Как это работает
+
+MP3 Player построен как Electron-приложение. Внутри используется Chromium-интерфейс, но пользователь не открывает браузер: Electron запускает обычное Windows-окно с локальным `index.html`, `styles.css` и `app.js`.
+
+Основной процесс Electron (`main.js`) отвечает за системные возможности:
+
+- создание окна приложения;
+- иконку и меню в системном трее;
+- системный выбор MP3-файлов;
+- безопасное чтение выбранных локальных файлов;
+- передачу данных в интерфейс через ограниченный IPC API;
+- запрет произвольных переходов, новых окон и сетевых запросов из интерфейса.
+
+Preload-слой (`preload.js`) открывает в renderer только минимальные методы: выбрать MP3-файлы, прочитать выбранные MP3-файлы и открыть разрешенную ссылку GitHub. В renderer нет прямого Node.js-доступа.
+
+Интерфейс (`app.js`) отвечает за медиатеку, поиск, плейлисты, избранное, обложки, воспроизведение, таймер, очередь, большой плеер, мини-плеер и смену вкладок. Чтобы приложение не тормозило на больших списках, вкладки `Песни` и `Избранное` рендерятся отдельно, а активная вкладка не пересоздается без изменения данных. Переход через край меню использует легкие placeholder-клоны, а не копии всей медиатеки.
+
+## Хранение данных
+
+- Список песен и технические данные сохраняются локально в IndexedDB.
+- Избранное, плейлисты, язык, тема и последняя вкладка сохраняются в localStorage.
+- Исходные MP3-файлы остаются на месте, где их выбрал пользователь.
+- Если файл вручную переместить или удалить с компьютера, запись может остаться в медиатеке, но старый путь уже не сможет воспроизвестись.
+- Удаление песни из приложения удаляет только запись из медиатеки, а не файл пользователя.
 
 ## Безопасность
 
-В приложении добавлены ограничения, чтобы оно не могло вредить пользователю:
-
-- renderer работает без Node.js доступа;
-- включен `contextIsolation`;
-- включен sandbox для окна Electron;
-- preload отдает в интерфейс только минимальный API для выбора и чтения MP3;
-- IPC-запросы принимаются только от локального `index.html` приложения;
-- чтение файлов ограничено абсолютными путями к `.mp3`;
-- пакетное чтение ограничено по количеству файлов;
-- приложение не имеет IPC-команд на запись, перезапись или удаление файлов пользователя;
-- включена Content Security Policy;
-- запрещены произвольные переходы, новые окна, фреймы и сетевые подключения из интерфейса;
-- внешняя ссылка разрешена только на репозиторий GitHub проекта;
-- запросы разрешений в Electron отклоняются.
+- Renderer работает без Node.js-доступа.
+- Включены `contextIsolation` и `sandbox`.
+- IPC-запросы принимаются только от локального `index.html` приложения.
+- Чтение файлов ограничено абсолютными путями к `.mp3`.
+- Пакетное чтение ограничено количеством файлов.
+- В приложении нет IPC-команд для записи, перезаписи или удаления пользовательских файлов.
+- Включена Content Security Policy.
+- Произвольные переходы, новые окна, фреймы и сетевые подключения из интерфейса заблокированы.
+- Внешняя ссылка разрешена только на репозиторий проекта GitHub.
 
 ## Технологии
 
 - **Electron** - настольная оболочка Windows-приложения.
-- **Chromium Web Audio / HTMLAudioElement** - воспроизведение MP3.
+- **Chromium HTMLAudioElement / Media Session API** - воспроизведение MP3 и интеграция с системной медиапанелью.
 - **JavaScript** - логика плеера, медиатеки, плейлистов, поиска и интерфейса.
-- **HTML/CSS** - интерфейс приложения.
+- **HTML/CSS** - разметка и адаптивный интерфейс.
 - **IndexedDB** - локальное хранение медиатеки.
-- **localStorage** - хранение настроек, языка, темы, избранного и плейлистов.
-- **Electron IPC + preload** - безопасный мост между интерфейсом и системным диалогом выбора файлов.
-- **ID3 parser в main.js** - чтение метаданных и обложек MP3 без загрузки всего файла в память.
-- **Media Session API** - интеграция с медиапанелью Windows.
-- **electron-builder** - сборка Electron-приложения.
-- **NSIS** - создание portable `.exe`, который запускается как один файл.
+- **localStorage** - настройки, избранное, плейлисты и выбранная вкладка.
+- **electron-builder** - сборка Windows-приложения.
+- **NSIS** - создание portable `.exe`, который временно распаковывает приложение и запускает `MP3 Player.exe`.
 
-## Файлы проекта
-
-```text
-main.js             Electron main process, окно, трей, IPC, безопасность, чтение MP3-тегов
-preload.js          безопасный bridge API для renderer
-index.html          структура интерфейса
-styles.css          стили приложения
-app.js              логика плеера, медиатеки, поиска, плейлистов и UI
-icon.svg            исходная SVG-иконка приложения
-icon.ico            Windows-иконка приложения
-build-portable.nsi  NSIS-скрипт для надежной single-file portable сборки
-package.json        зависимости и конфигурация сборки
-```
-
-## Разработка
-
-Установить зависимости:
+## Сборка
 
 ```bash
-pnpm install
-```
-
-Запустить приложение в режиме разработки:
-
-```bash
-pnpm start
-```
-
-Собрать распакованную папку приложения:
-
-```bash
-pnpm dist:folder
-```
-
-Собрать portable `.exe` через NSIS-скрипт:
-
-```bash
-pnpm dist:folder
+npm install
+npm run dist:folder
 makensis build-portable.nsi
 ```
 
-Готовый файл появится здесь:
+После сборки готовый файл будет здесь:
 
 ```text
 dist/MP3-Player-1.0.0-portable.exe
 ```
 
-## Лицензия
-
-MIT
+>**Автор проекта: Зейналов У.Р.о.**
 
 ---
 
 ## English Version
 
-**MP3 Player EXE** is a desktop MP3 player for Windows packaged as a self-contained `.exe` file. The user does not need a browser, local server, VBS script, or separate application folder: download one file and run it.
+**MP3 Player** is a desktop music player for Windows. The app is packaged as a standalone `.exe` file: the user downloads one file, runs it, and listens to music without a browser, local server, or separate app folder.
 
-[Russian version](#mp3-player-exe)
+[Русская версия](#mp3-player)
 
-## Download EXE
+<p>
+  <a href="https://github.com/dumuzeyn/MP3-player-EXE/raw/main/dist/MP3-Player-1.0.0-portable.exe">
+    <kbd><strong>Download MP3 Player for Windows (.exe)</strong></kbd>
+  </a>
+</p>
 
-[Download MP3-Player-1.0.0-portable.exe](https://github.com/dumuzeyn/MP3-player-EXE/raw/main/dist/MP3-Player-1.0.0-portable.exe)
-
-Local build path:
+The local build output is:
 
 ```text
 dist/MP3-Player-1.0.0-portable.exe
 ```
-
-The portable build extracts the app into a unique Windows Temp folder and launches it from there. Temporary files are removed after the app exits. Music library data and settings stay in local app storage.
 
 ## Features
 
-- Adds MP3 files from the computer with the `+` button.
-- Supports drag and drop for MP3 files.
-- Accepts only `.mp3` files.
-- Imports large batches without reading full audio files into memory.
-- Remembers imported songs after restart.
-- Stores the path to the original MP3 file instead of copying music into the app.
-- Removing a song from the app removes only the library entry, not the original file.
-- Reads ID3 metadata: title, artist, album, genre, and cover art when available.
-- Shows cover art in song lists, mini player, full player, groups, and playlists.
-- Provides `Songs`, `Favorites`, `Playlists`, `Genres`, `Artists`, `Albums`, and `Settings` sections.
-- Supports search in songs, favorites, and playlists.
-- Supports song search while adding songs to a playlist.
-- Creates, opens, fills, and deletes playlists.
-- Playlist cards show cover art, track count, and quick playback buttons.
-- Supports favorites.
-- Includes play-all and shuffle modes.
-- Includes queue playback, next track, and previous track.
-- Includes a full player with cover art, title, artist, progress, time, like, repeat, and sleep timer.
-- Includes a bottom mini-player with current song, cover art, and play/pause.
-- Clicking the mini-player opens the full player.
-- Music continues playing when the window is closed; the app hides to the system tray.
-- The tray menu can reopen the app or quit it.
-- Integrates with the Windows media panel through the Media Session API.
-- Supports light and dark themes.
-- Supports Russian and English UI. Language selection uses a dropdown so more languages can be added later.
-- The top menu can be dragged horizontally, including quick movement between the edge tabs `Songs` and `Settings`.
+- Add music with the `+` button through the native Windows file picker.
+- Add music by dragging MP3 files into the app window.
+- Only `.mp3` files are accepted, so unrelated files cannot enter the library by accident.
+- Large batches of songs can be imported at once; import work is chunked to keep the UI responsive.
+- Songs remain in the library after restarting the app.
+- The app stores the source MP3 path but does not delete or overwrite the user's music files.
+- ID3 metadata reading: title, artist, album, genre, and embedded cover art.
+- Cover art is shown in the song list, mini player, full player, genres, albums, artists, and playlists.
+- Sections: `Songs`, `Favorites`, `Playlists`, `Genres`, `Artists`, `Albums`, `Settings`.
+- Search in songs, favorites, and playlists.
+- Search while adding songs to a playlist.
+- Create, open, fill, clear, and delete playlists.
+- Play all or shuffle quickly.
+- Full player with cover art, title, artist, progress, time, favorite, repeat, and sleep timer.
+- Bottom mini player shows the current song, cover art, and play/pause button; clicking it opens the full player.
+- Music keeps playing after the window is closed: the app hides in the tray and can be reopened or fully exited from there.
+- Windows media panel support through the Media Session API: title, artist, cover art, play/pause, next/previous, and track position.
+- The top tab menu can be scrolled and dragged; it stays fixed at the top while the page scrolls vertically.
+- Light and dark themes.
+- Russian and English interface with a language dropdown.
+
+## Screenshots
+
+Empty library with the add button and drag and drop:
+
+![Empty library](docs/screenshots/empty-library.png)
+
+Song list with cover art, quick controls, and mini player:
+
+![Song list](docs/screenshots/songs-library.png)
+
+Full player with complete cover art, timer, favorite, repeat, and progress:
+
+![Full player](docs/screenshots/full-player.png)
+
+Playlists with cover art, song count, and quick playback:
+
+![Playlists](docs/screenshots/playlists.png)
+
+Genres, artists, and albums are generated from MP3 metadata:
+
+![Genres](docs/screenshots/genres.png)
+
+Settings for theme, language, library cleanup, and GitHub:
+
+![Settings](docs/screenshots/settings.png)
+
+## How It Works
+
+MP3 Player is built as an Electron app. It uses a Chromium-based interface internally, but the user does not open a browser: Electron starts a normal Windows window with local `index.html`, `styles.css`, and `app.js`.
+
+The Electron main process (`main.js`) handles system-level features:
+
+- creating the app window;
+- tray icon and tray menu;
+- native MP3 file picker;
+- safe reading of selected local files;
+- passing data to the interface through a limited IPC API;
+- blocking arbitrary navigation, new windows, and network requests from the UI.
+
+The preload layer (`preload.js`) exposes only the minimal methods needed by the interface: select MP3 files, read selected MP3 files, and open the allowed GitHub link. The renderer has no direct Node.js access.
+
+The interface (`app.js`) handles the library, search, playlists, favorites, cover art, playback, timer, queue, full player, mini player, and tab switching. For smoother work with large libraries, `Songs` and `Favorites` are rendered separately, and the active tab is not rebuilt unless its data changes. Edge tab transitions use lightweight placeholder clones instead of cloning the whole song library.
 
 ## Data Storage
 
-The app stores the library locally on the user's computer:
-
-- songs and technical metadata are stored in Electron/Chromium IndexedDB;
-- favorites, playlists, language, theme, and active view are stored in localStorage;
-- original MP3 files stay in their original locations;
-- the app does not upload music anywhere;
-- if the user manually moves or deletes an MP3 file, the library entry may remain, but the old path will no longer play.
+- Song records and technical data are stored locally in IndexedDB.
+- Favorites, playlists, language, theme, and the last active tab are stored in localStorage.
+- Source MP3 files stay where the user selected them.
+- If the user moves or deletes an MP3 manually, the library entry can remain, but the old path will no longer play.
+- Removing a song from the app removes only the library entry, not the user's file.
 
 ## Security
 
-The app includes restrictions to avoid harming the user:
-
-- the renderer has no Node.js access;
-- `contextIsolation` is enabled;
-- the Electron window runs in sandbox mode;
-- preload exposes only the minimal API for selecting and reading MP3 files;
-- IPC requests are accepted only from the local app `index.html`;
-- file reads are limited to absolute `.mp3` paths;
-- batch reads are limited by file count;
-- the app has no IPC command for writing, overwriting, or deleting user files;
-- Content Security Policy is enabled;
-- arbitrary navigation, new windows, frames, and network connections from the UI are blocked;
-- the only allowed external link is the project GitHub repository;
-- Electron permission requests are denied.
+- Renderer runs without Node.js access.
+- `contextIsolation` and `sandbox` are enabled.
+- IPC requests are accepted only from the local app `index.html`.
+- File reading is restricted to absolute `.mp3` paths.
+- Batch reading is limited by file count.
+- The app has no IPC command for writing, overwriting, or deleting user files.
+- Content Security Policy is enabled.
+- Arbitrary navigation, new windows, frames, and network connections from the UI are blocked.
+- The only allowed external link is the project GitHub repository.
 
 ## Technologies
 
-- **Electron** for the Windows desktop shell.
-- **Chromium Web Audio / HTMLAudioElement** for MP3 playback.
-- **JavaScript** for player, library, playlist, search, and UI logic.
-- **HTML/CSS** for the interface.
-- **IndexedDB** for local library storage.
-- **localStorage** for settings, language, theme, favorites, and playlists.
-- **Electron IPC + preload** for a safe bridge between the UI and native file dialogs.
-- **ID3 parser in main.js** for reading MP3 metadata and cover art without loading the whole file into memory.
-- **Media Session API** for Windows media panel integration.
-- **electron-builder** for Electron packaging.
-- **NSIS** for the single-file portable `.exe` build.
+- **Electron** - desktop Windows app shell.
+- **Chromium HTMLAudioElement / Media Session API** - MP3 playback and system media panel integration.
+- **JavaScript** - player, library, playlist, search, and UI logic.
+- **HTML/CSS** - layout and responsive interface.
+- **IndexedDB** - local library storage.
+- **localStorage** - settings, favorites, playlists, and active tab.
+- **electron-builder** - Windows app build.
+- **NSIS** - portable `.exe` generation that temporarily extracts the app and launches `MP3 Player.exe`.
 
-## Project Files
-
-```text
-main.js             Electron main process, window, tray, IPC, security, MP3 tag reading
-preload.js          safe bridge API for the renderer
-index.html          interface structure
-styles.css          app styles
-app.js              player, library, search, playlist, and UI logic
-icon.svg            source SVG app icon
-icon.ico            Windows app icon
-build-portable.nsi  NSIS script for reliable single-file portable builds
-package.json        dependencies and build configuration
-```
-
-## Development
-
-Install dependencies:
+## Build
 
 ```bash
-pnpm install
-```
-
-Run the app in development mode:
-
-```bash
-pnpm start
-```
-
-Build the unpacked app folder:
-
-```bash
-pnpm dist:folder
-```
-
-Build the portable `.exe` with the NSIS script:
-
-```bash
-pnpm dist:folder
+npm install
+npm run dist:folder
 makensis build-portable.nsi
 ```
 
-The output file is:
+The final file is created here:
 
 ```text
 dist/MP3-Player-1.0.0-portable.exe
 ```
 
-## License
-
-MIT
+>**Author of project: Zeynalov U.R.o.**

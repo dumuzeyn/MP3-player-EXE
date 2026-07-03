@@ -1475,3 +1475,24 @@ body.theme-dark .mini-player {
   object-fit: contain;
   object-position: center;
 }
+
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 90;
+}
+
+.content {
+  overflow: visible;
+}
+
+.view-clone {
+  pointer-events: none;
+}
+
+.view-clone-placeholder {
+  display: flex;
+  min-height: 240px;
+  align-items: flex-start;
+  padding: 24px 4px;
+}
