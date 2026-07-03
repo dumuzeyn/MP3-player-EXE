@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: file: blob:; media-src 'self' file: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none';" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#ffffff" />
     <title>MP3 Player</title>
@@ -10,14 +11,6 @@
   </head>
   <body>
     <div class="app-shell">
-      <header class="topbar">
-        <div class="brand">
-          <img class="brand-icon" src="icon.svg" alt="" aria-hidden="true" />
-          <p class="eyebrow">MP3 Player</p>
-        </div>
-        <button id="themeToggle" class="icon-button theme-toggle" title="&#1055;&#1077;&#1088;&#1077;&#1082;&#1083;&#1102;&#1095;&#1080;&#1090;&#1100; &#1090;&#1077;&#1084;&#1091;" hidden>&#9680;</button>
-      </header>
-
       <main class="content">
         <section class="toolbar" aria-label="&#1059;&#1087;&#1088;&#1072;&#1074;&#1083;&#1077;&#1085;&#1080;&#1077; &#1073;&#1080;&#1073;&#1083;&#1080;&#1086;&#1090;&#1077;&#1082;&#1086;&#1081;">
           <button class="pill active" data-view="songs">&#1055;&#1077;&#1089;&#1085;&#1080;</button>
@@ -27,7 +20,7 @@
           <button class="pill" data-view="artists">&#1048;&#1089;&#1087;&#1086;&#1083;&#1085;&#1080;&#1090;&#1077;&#1083;&#1080;</button>
           <button class="pill" data-view="albums">&#1040;&#1083;&#1100;&#1073;&#1086;&#1084;&#1099;</button>
           <button class="pill" data-view="settings">&#1053;&#1072;&#1089;&#1090;&#1088;&#1086;&#1081;&#1082;&#1080;</button>
-          <input id="fileInput" type="file" accept="audio/*" multiple hidden />
+          <input id="fileInput" type="file" accept=".mp3,audio/mpeg" multiple hidden />
         </section>
 
         <div id="viewPager" class="view-pager">
@@ -36,10 +29,10 @@
           <div class="section-title">
             <h2>&#1055;&#1077;&#1089;&#1077;&#1085; <span id="songCount">0</span></h2>
             <div class="header-actions">
-              <button id="playAllButton" class="play-mode-button" title="&#1042;&#1089;&#1077; &#1087;&#1086;&#1076;&#1088;&#1103;&#1076;"></button>
-              <button id="shuffleButton" class="play-mode-button" title="&#1057;&#1083;&#1091;&#1095;&#1072;&#1081;&#1085;&#1086;"></button>
               <button id="addMusicButton" class="icon-button search-button" title="&#1044;&#1086;&#1073;&#1072;&#1074;&#1080;&#1090;&#1100; &#1084;&#1091;&#1079;&#1099;&#1082;&#1091;">+</button>
               <button id="searchToggle" class="icon-button search-button" title="&#1055;&#1086;&#1080;&#1089;&#1082;">&#8981;</button>
+              <button id="playAllButton" class="play-mode-button" title="&#1042;&#1089;&#1077; &#1087;&#1086;&#1076;&#1088;&#1103;&#1076;"></button>
+              <button id="shuffleButton" class="play-mode-button" title="&#1057;&#1083;&#1091;&#1095;&#1072;&#1081;&#1085;&#1086;"></button>
             </div>
           </div>
           <div id="searchRow" class="search-row" hidden>
@@ -47,7 +40,7 @@
           </div>
           <div id="emptyState" class="empty-state">
             <strong>&#1044;&#1086;&#1073;&#1072;&#1074;&#1100;&#1090;&#1077; MP3 &#1080;&#1083;&#1080; &#1076;&#1088;&#1091;&#1075;&#1086;&#1081; &#1072;&#1091;&#1076;&#1080;&#1086;&#1092;&#1072;&#1081;&#1083;</strong>
-            <span>&#1053;&#1072;&#1078;&#1084;&#1080;&#1090;&#1077; &#1087;&#1083;&#1102;&#1089; &#1080; &#1074;&#1099;&#1073;&#1077;&#1088;&#1080;&#1090;&#1077; &#1084;&#1091;&#1079;&#1099;&#1082;&#1091; &#1085;&#1072; &#1090;&#1077;&#1083;&#1077;&#1092;&#1086;&#1085;&#1077;.</span>
+            <span>&#1053;&#1072;&#1078;&#1084;&#1080;&#1090;&#1077; &#1087;&#1083;&#1102;&#1089; &#1080;&#1083;&#1080; &#1087;&#1077;&#1088;&#1077;&#1090;&#1072;&#1097;&#1080;&#1090;&#1077; &#1084;&#1091;&#1079;&#1099;&#1082;&#1091; &#1089; &#1082;&#1086;&#1084;&#1087;&#1100;&#1102;&#1090;&#1077;&#1088;&#1072;.</span>
           </div>
           <ul id="songList" class="song-list"></ul>
         </section>
@@ -56,10 +49,10 @@
           <div class="section-title">
             <h2>&#1048;&#1079;&#1073;&#1088;&#1072;&#1085;&#1085;&#1086;&#1077;</h2>
             <div class="header-actions">
-              <button id="favoritePlayAllButton" class="play-mode-button" title="&#1042;&#1089;&#1077; &#1087;&#1086;&#1076;&#1088;&#1103;&#1076;"></button>
-              <button id="favoriteShuffleButton" class="play-mode-button" title="&#1057;&#1083;&#1091;&#1095;&#1072;&#1081;&#1085;&#1086;"></button>
               <button id="favoriteAddButton" class="icon-button search-button" title="&#1044;&#1086;&#1073;&#1072;&#1074;&#1080;&#1090;&#1100; &#1074; &#1080;&#1079;&#1073;&#1088;&#1072;&#1085;&#1085;&#1086;&#1077;">+</button>
               <button id="favoriteSearchToggle" class="icon-button search-button" title="&#1055;&#1086;&#1080;&#1089;&#1082;">&#8981;</button>
+              <button id="favoritePlayAllButton" class="play-mode-button" title="&#1042;&#1089;&#1077; &#1087;&#1086;&#1076;&#1088;&#1103;&#1076;"></button>
+              <button id="favoriteShuffleButton" class="play-mode-button" title="&#1057;&#1083;&#1091;&#1095;&#1072;&#1081;&#1085;&#1086;"></button>
             </div>
           </div>
           <div id="favoriteSearchRow" class="search-row" hidden>
@@ -112,15 +105,11 @@
             </button>
             <div class="settings-row settings-language">
               <span class="settings-title">&#1071;&#1079;&#1099;&#1082;</span>
-              <div class="settings-choice-row">
-                <button id="languageEnglish" type="button">English</button>
-                <button id="languageRussian" type="button">&#1056;&#1091;&#1089;&#1089;&#1082;&#1080;&#1081;</button>
-              </div>
+              <select id="languageSelect" class="settings-select" aria-label="&#1071;&#1079;&#1099;&#1082;">
+                <option value="ru">&#1056;&#1091;&#1089;&#1089;&#1082;&#1080;&#1081;</option>
+                <option value="en">English</option>
+              </select>
             </div>
-            <a class="settings-row" href="https://github.com/dumuzeyn/MP3-player" target="_blank" rel="noreferrer">
-              <span class="settings-title">GitHub</span>
-              <span class="settings-value">dumuzeyn/MP3-player</span>
-            </a>
             <button id="deleteAllSongsButton" class="settings-row danger-settings" type="button">
               <span class="settings-title">&#1059;&#1076;&#1072;&#1083;&#1080;&#1090;&#1100; &#1074;&#1089;&#1077; &#1087;&#1077;&#1089;&#1085;&#1080; &#1080;&#1079; &#1087;&#1088;&#1080;&#1083;&#1086;&#1078;&#1077;&#1085;&#1080;&#1103;</span>
               <span class="settings-value">&#1060;&#1072;&#1081;&#1083;&#1099; &#1085;&#1072; &#1091;&#1089;&#1090;&#1088;&#1086;&#1081;&#1089;&#1090;&#1074;&#1077; &#1085;&#1077; &#1091;&#1076;&#1072;&#1083;&#1103;&#1102;&#1090;&#1089;&#1103;</span>
@@ -129,6 +118,14 @@
               <span class="settings-title">&#1059;&#1076;&#1072;&#1083;&#1080;&#1090;&#1100; &#1074;&#1089;&#1077; &#1087;&#1083;&#1077;&#1081;&#1083;&#1080;&#1089;&#1090;&#1099;</span>
               <span class="settings-value">&#1055;&#1077;&#1089;&#1085;&#1080; &#1086;&#1089;&#1090;&#1072;&#1085;&#1091;&#1090;&#1089;&#1103; &#1074; &#1073;&#1080;&#1073;&#1083;&#1080;&#1086;&#1090;&#1077;&#1082;&#1077;</span>
             </button>
+            <a id="settingsGithub" class="settings-row settings-github" href="https://github.com/dumuzeyn/MP3-player-EXE" target="_blank" rel="noreferrer">
+              <span class="settings-title">GitHub</span>
+              <span class="settings-value">dumuzeyn/MP3-player-EXE</span>
+            </a>
+            <div class="settings-row settings-version">
+              <span class="settings-title">&#1042;&#1077;&#1088;&#1089;&#1080;&#1103;</span>
+              <span id="settingsVersionValue" class="settings-value">UI fix 2026-07-03 12:30</span>
+            </div>
           </div>
         </section>
           </div>
@@ -136,7 +133,8 @@
       </main>
 
       <button id="miniPlayer" class="mini-player" hidden>
-        <div>
+        <span id="miniCover" class="mini-cover">&#9834;</span>
+        <div class="mini-copy">
           <span id="miniTitle">&#1055;&#1077;&#1089;&#1085;&#1103;</span>
           <small id="miniArtist">&#1053;&#1072;&#1078;&#1084;&#1080;&#1090;&#1077;, &#1095;&#1090;&#1086;&#1073;&#1099; &#1086;&#1090;&#1082;&#1088;&#1099;&#1090;&#1100;</small>
         </div>
@@ -156,9 +154,9 @@
         <p id="playerSubtitle">&#1052;&#1091;&#1079;&#1099;&#1082;&#1072; &#1087;&#1086;&#1103;&#1074;&#1080;&#1090;&#1089;&#1103; &#1079;&#1076;&#1077;&#1089;&#1100;</p>
       </div>
       <div class="secondary-controls">
-        <button id="timerButton" class="control-button" title="&#1058;&#1072;&#1081;&#1084;&#1077;&#1088;"><span id="timerLabel">&#1058;&#1072;&#1081;&#1084;&#1077;&#1088;</span></button>
-        <button id="likeButton" class="control-button" title="&#1042; &#1080;&#1079;&#1073;&#1088;&#1072;&#1085;&#1085;&#1086;&#1077;">&#9825;<span>&#1051;&#1072;&#1081;&#1082;</span></button>
-        <button id="loopButton" class="control-button" title="&#1055;&#1086;&#1074;&#1090;&#1086;&#1088;"><span id="loopLabel">&#1042;&#1099;&#1082;&#1083;</span></button>
+        <button id="timerButton" class="control-button" title="&#1058;&#1072;&#1081;&#1084;&#1077;&#1088;"><span class="control-symbol">&#9719;</span><span id="timerLabel">&#1058;&#1072;&#1081;&#1084;&#1077;&#1088;</span></button>
+        <button id="likeButton" class="control-button" title="&#1042; &#1080;&#1079;&#1073;&#1088;&#1072;&#1085;&#1085;&#1086;&#1077;"><span id="likeIcon" class="control-symbol">&#9825;</span><span>&#1051;&#1072;&#1081;&#1082;</span></button>
+        <button id="loopButton" class="control-button" title="&#1055;&#1086;&#1074;&#1090;&#1086;&#1088;"><span class="control-symbol">&#8635;</span><span id="loopLabel">&#1042;&#1099;&#1082;&#1083;</span></button>
       </div>
       <div class="seek-area">
         <input id="seekBar" type="range" min="0" value="0" step="1" />
@@ -168,9 +166,9 @@
         </div>
       </div>
       <div class="main-controls">
-        <button id="prevButton" class="round-button" title="&#1055;&#1088;&#1077;&#1076;&#1099;&#1076;&#1091;&#1097;&#1072;&#1103;">&#9198;</button>
+        <button id="prevButton" class="round-button" title="&#1055;&#1088;&#1077;&#1076;&#1099;&#1076;&#1091;&#1097;&#1072;&#1103;">&#9664;&#10073;</button>
         <button id="playButton" class="play-button" title="&#1055;&#1072;&#1091;&#1079;&#1072; &#1080;&#1083;&#1080; &#1074;&#1086;&#1089;&#1087;&#1088;&#1086;&#1080;&#1079;&#1074;&#1077;&#1076;&#1077;&#1085;&#1080;&#1077;">&#9654;</button>
-        <button id="nextButton" class="round-button" title="&#1057;&#1083;&#1077;&#1076;&#1091;&#1102;&#1097;&#1072;&#1103;">&#9197;</button>
+        <button id="nextButton" class="round-button" title="&#1057;&#1083;&#1077;&#1076;&#1091;&#1102;&#1097;&#1072;&#1103;">&#10073;&#9654;</button>
       </div>
     </div>
 
@@ -205,6 +203,9 @@
             <button id="confirmPlaylistAdd" class="icon-button square-control" title="&#1044;&#1086;&#1073;&#1072;&#1074;&#1080;&#1090;&#1100; &#1074;&#1099;&#1073;&#1088;&#1072;&#1085;&#1085;&#1099;&#1077;">+</button>
             <button id="closePlaylistAdd" class="icon-button" title="&#1047;&#1072;&#1082;&#1088;&#1099;&#1090;&#1100;">&#215;</button>
           </div>
+        </div>
+        <div class="search-row panel-search-row">
+          <input id="playlistAddSearchInput" type="search" placeholder="&#1055;&#1086;&#1080;&#1089;&#1082; &#1087;&#1077;&#1089;&#1085;&#1080;" autocomplete="off" />
         </div>
         <ul id="playlistAddList" class="song-list compact"></ul>
       </div>

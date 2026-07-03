@@ -19,6 +19,7 @@
     },
     "files": [
       "app.js",
+      "icon.ico",
       "icon.svg",
       "index.html",
       "main.js",
@@ -27,6 +28,7 @@
       "styles.css"
     ],
     "win": {
+      "icon": "icon.ico",
       "signAndEditExecutable": false,
       "target": [
         "portable"

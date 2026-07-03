@@ -5,6 +5,7 @@ const favoriteList = document.querySelector("#favoriteList");
 const playlistList = document.querySelector("#playlistList");
 const emptyState = document.querySelector("#emptyState");
 const miniPlayer = document.querySelector("#miniPlayer");
+const miniCover = document.querySelector("#miniCover");
 const miniTitle = document.querySelector("#miniTitle");
 const miniArtist = document.querySelector("#miniArtist");
 const miniState = document.querySelector("#miniState");
@@ -12,8 +13,7 @@ const playerSheet = document.querySelector("#playerSheet");
 const themeToggle = document.querySelector("#themeToggle");
 const settingsThemeToggle = document.querySelector("#settingsThemeToggle");
 const settingsThemeValue = document.querySelector("#settingsThemeValue");
-const languageEnglish = document.querySelector("#languageEnglish");
-const languageRussian = document.querySelector("#languageRussian");
+const languageSelect = document.querySelector("#languageSelect");
 const deleteAllSongsButton = document.querySelector("#deleteAllSongsButton");
 const deleteAllPlaylistsButton = document.querySelector("#deleteAllPlaylistsButton");
 const queuePanel = document.querySelector("#queuePanel");
@@ -30,6 +30,7 @@ const currentTime = document.querySelector("#currentTime");
 const remainingTime = document.querySelector("#remainingTime");
 const playButton = document.querySelector("#playButton");
 const likeButton = document.querySelector("#likeButton");
+const likeIcon = document.querySelector("#likeIcon");
 const loopButton = document.querySelector("#loopButton");
 const loopLabel = document.querySelector("#loopLabel");
 const timerLabel = document.querySelector("#timerLabel");
@@ -59,6 +60,7 @@ const confirmFavoriteAdd = document.querySelector("#confirmFavoriteAdd");
 const playlistAddPanel = document.querySelector("#playlistAddPanel");
 const playlistAddList = document.querySelector("#playlistAddList");
 const playlistAddTitle = document.querySelector("#playlistAddTitle");
+const playlistAddSearchInput = document.querySelector("#playlistAddSearchInput");
 const confirmPlaylistAdd = document.querySelector("#confirmPlaylistAdd");
 const playlistDetailPanel = document.querySelector("#playlistDetailPanel");
 const playlistDetailTitle = document.querySelector("#playlistDetailTitle");
@@ -147,6 +149,7 @@ const state = {
   searchQuery: "",
   favoriteSearchQuery: "",
   playlistSearchQuery: "",
+  playlistAddSearchQuery: "",
   editingPlaylistId: null,
   viewingPlaylistId: null,
   groupDetailSongs: [],
@@ -162,6 +165,8 @@ const state = {
 };
 
 let pendingConfirmAction = null;
+let sortedSongsCache = { signature: "", songs: [] };
+let refreshViewClones = () => {};
 
 const loopText = {
   off: "\u0412\u044b\u043a\u043b",
@@ -197,7 +202,7 @@ function t(key) {
     deletePlaylists: ["Delete all playlists", "\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0432\u0441\u0435 \u043f\u043b\u0435\u0439\u043b\u0438\u0441\u0442\u044b"],
     songsStay: ["Songs stay in the library", "\u041f\u0435\u0441\u043d\u0438 \u043e\u0441\u0442\u0430\u043d\u0443\u0442\u0441\u044f \u0432 \u0431\u0438\u0431\u043b\u0438\u043e\u0442\u0435\u043a\u0435"],
     addAudio: ["Add MP3 or another audio file", "\u0414\u043e\u0431\u0430\u0432\u044c\u0442\u0435 MP3 \u0438\u043b\u0438 \u0434\u0440\u0443\u0433\u043e\u0439 \u0430\u0443\u0434\u0438\u043e\u0444\u0430\u0439\u043b"],
-    addAudioHint: ["Press plus and choose music on the device.", "\u041d\u0430\u0436\u043c\u0438\u0442\u0435 \u043f\u043b\u044e\u0441 \u0438 \u0432\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u043c\u0443\u0437\u044b\u043a\u0443 \u043d\u0430 \u0442\u0435\u043b\u0435\u0444\u043e\u043d\u0435."],
+    addAudioHint: ["Press plus or drag music files here.", "\u041d\u0430\u0436\u043c\u0438\u0442\u0435 \u043f\u043b\u044e\u0441 \u0438\u043b\u0438 \u043f\u0435\u0440\u0435\u0442\u0430\u0449\u0438\u0442\u0435 \u043c\u0443\u0437\u044b\u043a\u0443 \u0441 \u043a\u043e\u043c\u043f\u044c\u044e\u0442\u0435\u0440\u0430."],
     searchSong: ["Search song", "\u041f\u043e\u0438\u0441\u043a \u043f\u0435\u0441\u043d\u0438"],
     searchFavorite: ["Search favorites", "\u041f\u043e\u0438\u0441\u043a \u0432 \u0438\u0437\u0431\u0440\u0430\u043d\u043d\u043e\u043c"],
     searchPlaylist: ["Search playlist", "\u041f\u043e\u0438\u0441\u043a \u043f\u043b\u0435\u0439\u043b\u0438\u0441\u0442\u0430"],
@@ -233,6 +238,7 @@ function applyLanguage() {
   if (searchInput) searchInput.placeholder = t("searchSong");
   if (favoriteSearchInput) favoriteSearchInput.placeholder = t("searchFavorite");
   if (playlistSearchInput) playlistSearchInput.placeholder = t("searchPlaylist");
+  if (playlistAddSearchInput) playlistAddSearchInput.placeholder = t("searchSong");
   if (playlistName) playlistName.placeholder = t("playlistName");
   renderSettings();
 }
@@ -266,10 +272,29 @@ function activeViewIndex() {
   return index === -1 ? 0 : index;
 }
 
-function setViewTrackTransform(offsetPx = 0) {
+function visualViewIndex(viewName = state.activeView) {
+  const index = viewNames.indexOf(viewName);
+  return (index === -1 ? 0 : index) + 1;
+}
+
+function setViewTrackTransform(offsetPx = 0, viewName = state.activeView) {
   if (!viewTrack) return;
-  const index = activeViewIndex();
+  const index = visualViewIndex(viewName);
   viewTrack.style.transform = `translate3d(calc(${-index * 100}% + ${Math.round(offsetPx)}px), 0, 0)`;
+}
+
+function setViewTrackVisualIndex(index, offsetPx = 0) {
+  if (!viewTrack) return;
+  viewTrack.style.transform = `translate3d(calc(${-index * 100}% + ${Math.round(offsetPx)}px), 0, 0)`;
+}
+
+function withoutViewTrackTransition(callback) {
+  if (!viewTrack) return;
+  const previousTransition = viewTrack.style.transition;
+  viewTrack.style.transition = "none";
+  callback();
+  viewTrack.offsetHeight;
+  viewTrack.style.transition = previousTransition;
 }
 
 function updateViewPagerHeight() {
@@ -438,11 +463,44 @@ async function loadSavedSongs() {
   return new Promise((resolve, reject) => {
     const request = db.transaction(DB_STORE, "readonly").objectStore(DB_STORE).getAll();
     request.onsuccess = async () => {
-      const songs = await Promise.all(request.result.map(async (record) => {
-        if (record.artist && record.album && record.genre && record.coverBlob !== undefined && record.waveform && record.waveformVersion === WAVEFORM_VERSION) return hydrateSong(record);
+      const songs = [];
+      const records = request.result || [];
+      const missingCoverPaths = records
+        .filter((record) => record.filePath && !record.coverDataUrl)
+        .map((record) => record.filePath);
+      const freshRecords = missingCoverPaths.length && window.mp3PlayerNative?.readAudioFiles
+        ? await window.mp3PlayerNative.readAudioFiles(missingCoverPaths).catch(() => [])
+        : [];
+      const freshByPath = new Map(freshRecords.map((record) => [record.filePath, record]));
+      for (const record of records) {
+        if (record.filePath) {
+          let nextRecord = record;
+          if (!record.coverDataUrl && window.mp3PlayerNative?.readAudioFiles) {
+            const fresh = freshByPath.get(record.filePath);
+            if (fresh) {
+              nextRecord = {
+                ...record,
+                title: normalizeValue(fresh.title, record.title),
+                artist: normalizeValue(fresh.artist, record.artist),
+                album: normalizeValue(fresh.album, record.album),
+                genre: normalizeValue(fresh.genre, record.genre),
+                coverDataUrl: fresh.coverDataUrl || record.coverDataUrl || "",
+                fileUrl: fresh.fileUrl || record.fileUrl,
+                fileSize: fresh.size || record.fileSize,
+                fileLastModified: fresh.lastModified || record.fileLastModified,
+              };
+            }
+          }
+          songs.push(hydrateSong(nextRecord));
+          continue;
+        }
+        if (record.artist && record.album && record.genre && record.coverBlob !== undefined && record.waveform && record.waveformVersion === WAVEFORM_VERSION) {
+          songs.push(hydrateSong(record));
+          continue;
+        }
         const tags = await readAudioTags(record.file).catch(() => ({}));
         const waveform = await buildWaveform(record.file).catch(() => record.waveform || []);
-        return hydrateSong({
+        songs.push(hydrateSong({
           ...record,
           title: normalizeValue(tags.title, record.title),
           artist: normalizeValue(tags.artist, "\u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0439 \u0438\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c"),
@@ -451,8 +509,8 @@ async function loadSavedSongs() {
           coverBlob: tags.coverBlob || null,
           waveform,
           waveformVersion: WAVEFORM_VERSION,
-        });
-      }));
+        }));
+      }
       resolve(songs);
       songs.forEach(saveSong);
     };
@@ -469,8 +527,14 @@ async function saveSong(song) {
       artist: song.artist,
       album: song.album,
       genre: song.genre,
-      file: song.file,
+      file: song.file || null,
+      filePath: song.filePath || "",
+      fileUrl: song.fileUrl || "",
+      fileName: song.fileName || "",
+      fileSize: song.fileSize || 0,
+      fileLastModified: song.fileLastModified || 0,
       coverBlob: song.coverBlob,
+      coverDataUrl: song.coverDataUrl || "",
       duration: song.duration,
       waveform: song.waveform,
       waveformVersion: WAVEFORM_VERSION,
@@ -499,6 +563,15 @@ async function deleteSongRecord(songId) {
 }
 
 function hydrateSong(record) {
+  if (record.filePath) {
+    return {
+      ...record,
+      file: null,
+      url: record.fileUrl,
+      coverUrl: record.coverDataUrl || (record.coverBlob ? URL.createObjectURL(record.coverBlob) : ""),
+    };
+  }
+
   return {
     ...record,
     url: URL.createObjectURL(record.file),
@@ -526,6 +599,36 @@ async function makeSong(file) {
   };
 }
 
+async function makeSongFromNativeRecord(record) {
+  const fallbackTitle = record.name.replace(/\.[^/.]+$/, "");
+  const waveform = await buildWaveform({
+    name: record.name,
+    size: record.size,
+    lastModified: record.lastModified,
+  }).catch(() => []);
+
+  return {
+    id: record.filePath || `${record.name}-${record.size}-${record.lastModified}`,
+    title: normalizeValue(record.title, fallbackTitle),
+    artist: normalizeValue(record.artist, "\u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0439 \u0438\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c"),
+    album: normalizeValue(record.album, "\u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0439 \u0430\u043b\u044c\u0431\u043e\u043c"),
+    genre: normalizeValue(record.genre, "\u0411\u0435\u0437 \u0436\u0430\u043d\u0440\u0430"),
+    file: null,
+    filePath: record.filePath,
+    fileUrl: record.fileUrl,
+    fileName: record.name,
+    fileSize: record.size,
+    fileLastModified: record.lastModified,
+    url: record.fileUrl,
+    coverBlob: null,
+    coverDataUrl: record.coverDataUrl || "",
+    coverUrl: record.coverDataUrl || "",
+    duration: 0,
+    waveform,
+    waveformVersion: WAVEFORM_VERSION,
+  };
+}
+
 function currentSong() {
   return state.queue[state.currentIndex] || null;
 }
@@ -537,7 +640,21 @@ function titleScriptRank(title) {
   return 2;
 }
 
+function sortedSongsSignature(songs) {
+  return `${songs.length}:${songs.map((song) => song.id).join("|")}`;
+}
+
 function sortedSongs(songs = state.songs) {
+  if (songs === state.songs) {
+    const signature = sortedSongsSignature(songs);
+    if (sortedSongsCache.signature === signature) return sortedSongsCache.songs;
+    sortedSongsCache = { signature, songs: sortSongList(songs) };
+    return sortedSongsCache.songs;
+  }
+  return sortSongList(songs);
+}
+
+function sortSongList(songs) {
   return [...songs].sort((a, b) => {
     const rankA = titleScriptRank(a.title);
     const rankB = titleScriptRank(b.title);
@@ -588,7 +705,7 @@ function renderPlaybackState() {
     row.classList.toggle("playing", isCurrent);
     row.querySelectorAll(".play-now, .play-preview").forEach((button) => {
       button.classList.toggle("pause-now", isPlaying);
-      button.textContent = isPlaying ? "\u23f8" : "\u25b6";
+      button.textContent = isPlaying ? "II" : "\u25b6";
       button.title = isPlaying ? "\u041f\u0430\u0443\u0437\u0430" : "\u0418\u0433\u0440\u0430\u0442\u044c";
     });
   });
@@ -732,8 +849,8 @@ async function deleteSongFromApp(songId) {
     audio.load();
   }
 
-  if (song.url) URL.revokeObjectURL(song.url);
-  if (song.coverUrl) URL.revokeObjectURL(song.coverUrl);
+  if (song.url && !song.filePath) URL.revokeObjectURL(song.url);
+  if (song.coverUrl && !song.coverDataUrl) URL.revokeObjectURL(song.coverUrl);
 
   state.songs = state.songs.filter((item) => item.id !== songId);
   state.favorites.delete(songId);
@@ -761,17 +878,15 @@ async function deleteSongFromApp(songId) {
 function renderSettings() {
   if (!settingsThemeValue || !settingsThemeToggle) return;
   const dark = state.theme === "dark";
-  const rows = document.querySelectorAll("#settingsView .settings-row");
-  rows[0]?.querySelector(".settings-title") && (rows[0].querySelector(".settings-title").textContent = t("theme"));
-  rows[1]?.querySelector(".settings-title") && (rows[1].querySelector(".settings-title").textContent = t("language"));
-  rows[3]?.querySelector(".settings-title") && (rows[3].querySelector(".settings-title").textContent = t("deleteSongs"));
-  rows[3]?.querySelector(".settings-value") && (rows[3].querySelector(".settings-value").textContent = t("filesStay"));
-  rows[4]?.querySelector(".settings-title") && (rows[4].querySelector(".settings-title").textContent = t("deletePlaylists"));
-  rows[4]?.querySelector(".settings-value") && (rows[4].querySelector(".settings-value").textContent = t("songsStay"));
+  settingsThemeToggle.querySelector(".settings-title").textContent = t("theme");
+  document.querySelector(".settings-language .settings-title").textContent = t("language");
+  deleteAllSongsButton.querySelector(".settings-title").textContent = t("deleteSongs");
+  deleteAllSongsButton.querySelector(".settings-value").textContent = t("filesStay");
+  deleteAllPlaylistsButton.querySelector(".settings-title").textContent = t("deletePlaylists");
+  deleteAllPlaylistsButton.querySelector(".settings-value").textContent = t("songsStay");
   settingsThemeValue.textContent = dark ? t("dark") : t("light");
   settingsThemeToggle.title = dark ? "Switch to light theme" : "Switch to dark theme";
-  languageEnglish?.classList.toggle("active", state.language === "en");
-  languageRussian?.classList.toggle("active", state.language !== "en");
+  if (languageSelect) languageSelect.value = state.language;
 }
 
 function setTheme(nextTheme) {
@@ -802,7 +917,7 @@ async function deleteAllSongsFromApp() {
   audio.load();
   state.songs.forEach((song) => {
     if (song.url) URL.revokeObjectURL(song.url);
-    if (song.coverUrl) URL.revokeObjectURL(song.coverUrl);
+    if (song.coverUrl && !song.coverDataUrl) URL.revokeObjectURL(song.coverUrl);
   });
   state.songs = [];
   state.favorites.clear();
@@ -910,6 +1025,80 @@ function coverHtml(song, className = "") {
   return escapeHtml(song?.title?.trim().charAt(0).toUpperCase() || "\u266a");
 }
 
+function mediaArtwork(song) {
+  if (!song?.coverUrl) return [];
+  const dataType = String(song.coverDataUrl || song.coverUrl).match(/^data:([^;,]+)/)?.[1] || "image/jpeg";
+  return [
+    { src: song.coverUrl, sizes: "96x96", type: dataType },
+    { src: song.coverUrl, sizes: "256x256", type: dataType },
+    { src: song.coverUrl, sizes: "512x512", type: dataType },
+  ];
+}
+
+function updateMediaSessionPosition() {
+  if (!("mediaSession" in navigator) || typeof navigator.mediaSession.setPositionState !== "function") return;
+  const duration = Number(audio.duration);
+  const position = Number(audio.currentTime);
+  if (!Number.isFinite(duration) || duration <= 0 || !Number.isFinite(position)) return;
+  try {
+    navigator.mediaSession.setPositionState({
+      duration,
+      playbackRate: audio.playbackRate || 1,
+      position: Math.min(Math.max(position, 0), duration),
+    });
+  } catch {}
+}
+
+function updateMediaSession() {
+  if (!("mediaSession" in navigator)) return;
+  const song = currentSong();
+  try {
+    navigator.mediaSession.playbackState = song ? (audio.paused ? "paused" : "playing") : "none";
+    navigator.mediaSession.metadata = song && "MediaMetadata" in window
+      ? new MediaMetadata({
+        title: song.title || "\u041f\u0435\u0441\u043d\u044f",
+        artist: song.artist || "\u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0439 \u0438\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c",
+        album: song.album || "",
+        artwork: mediaArtwork(song),
+      })
+      : null;
+    updateMediaSessionPosition();
+  } catch {}
+}
+
+function setupMediaSessionControls() {
+  if (!("mediaSession" in navigator)) return;
+  const setHandler = (name, handler) => {
+    try {
+      navigator.mediaSession.setActionHandler(name, handler);
+    } catch {}
+  };
+  setHandler("play", () => {
+    if (currentSong() && audio.paused) togglePlay();
+  });
+  setHandler("pause", () => {
+    if (currentSong() && !audio.paused) togglePlay();
+  });
+  setHandler("previoustrack", playPrevious);
+  setHandler("nexttrack", playNext);
+  setHandler("seekbackward", (details = {}) => {
+    audio.currentTime = Math.max(0, audio.currentTime - (details.seekOffset || 10));
+    updateMediaSessionPosition();
+  });
+  setHandler("seekforward", (details = {}) => {
+    const duration = Number(audio.duration);
+    const nextTime = audio.currentTime + (details.seekOffset || 10);
+    audio.currentTime = Number.isFinite(duration) ? Math.min(duration, nextTime) : nextTime;
+    updateMediaSessionPosition();
+  });
+  setHandler("seekto", (details = {}) => {
+    if (!Number.isFinite(details.seekTime)) return;
+    if (details.fastSeek && typeof audio.fastSeek === "function") audio.fastSeek(details.seekTime);
+    else audio.currentTime = details.seekTime;
+    updateMediaSessionPosition();
+  });
+}
+
 function songSeed(song) {
   return [...song.id].reduce((sum, char) => sum + char.charCodeAt(0), 0);
 }
@@ -950,7 +1139,7 @@ function renderSongRow(song, queue, compact = false, options = {}) {
       ${actionMenu ? `<button class="tiny-button song-menu" title="\u0421\u0432\u043e\u0439\u0441\u0442\u0432\u0430">\u22ef</button>` : ""}
       ${favoriteOnly ? `<button class="tiny-button favorite active" title="\u0423\u0431\u0440\u0430\u0442\u044c \u0438\u0437 \u0438\u0437\u0431\u0440\u0430\u043d\u043d\u043e\u0433\u043e">\u2665</button>` : ""}
       ${compact && playlistId ? `<button class="tiny-button remove-from-playlist" title="\u0423\u0431\u0440\u0430\u0442\u044c \u0438\u0437 \u043f\u043b\u0435\u0439\u043b\u0438\u0441\u0442\u0430">\u2212</button>` : ""}
-      <button class="tiny-button play-now ${isPlaying ? "pause-now" : ""}" title="${isPlaying ? "\u041f\u0430\u0443\u0437\u0430" : "\u0418\u0433\u0440\u0430\u0442\u044c"}">${isPlaying ? "\u23f8" : "\u25b6"}</button>
+      <button class="tiny-button play-now ${isPlaying ? "pause-now" : ""}" title="${isPlaying ? "\u041f\u0430\u0443\u0437\u0430" : "\u0418\u0433\u0440\u0430\u0442\u044c"}">${isPlaying ? "II" : "\u25b6"}</button>
     </div>
   `;
   li.querySelector(".song-title").addEventListener("click", () => playOrPauseSong(song, queue));
@@ -1026,23 +1215,26 @@ function renderPlayer() {
   const song = currentSong();
   if (!song) {
     updateMiniPlayerVisibility();
+    updateMediaSession();
     return;
   }
   playerTitle.textContent = song.title;
   playerSubtitle.textContent = `${song.artist} \u2022 ${state.currentIndex + 1} \u0438\u0437 ${state.queue.length}`;
   coverArt.innerHTML = coverHtml(song);
+  miniCover.innerHTML = coverHtml(song);
   miniTitle.textContent = song.title;
   miniArtist.textContent = audio.paused ? `${song.artist} \u2022 \u043f\u0430\u0443\u0437\u0430` : song.artist;
-  miniState.textContent = audio.paused ? "\u25b6" : "\u23f8";
-  playButton.textContent = audio.paused ? "\u25b6" : "\u23f8";
+  miniState.textContent = audio.paused ? "\u25b6" : "II";
+  playButton.textContent = audio.paused ? "\u25b6" : "II";
   miniState.classList.toggle("pause-now", !audio.paused);
   playButton.classList.toggle("pause-now", !audio.paused);
   likeButton.classList.toggle("active", state.favorites.has(song.id));
-  likeButton.firstChild.textContent = state.favorites.has(song.id) ? "\u2665" : "\u2661";
+  likeIcon.textContent = state.favorites.has(song.id) ? "\u2665" : "\u2661";
   loopLabel.textContent = loopText[state.loopMode];
   loopButton.dataset.loop = state.loopMode;
   loopButton.classList.toggle("active", state.loopMode !== "off");
   updateMiniPlayerVisibility();
+  updateMediaSession();
 }
 
 function renderQueue() {
@@ -1145,28 +1337,23 @@ function renderPlaylist(playlist) {
   const songs = sortedSongs(state.songs.filter((song) => playlist.songIds.includes(song.id)));
   const coverSongs = songs.length ? songs.slice(0, 6) : [];
   const shouldRotate = songs.length > 3;
-  const tickerSongs = songs.length ? (shouldRotate ? [...songs, ...songs, ...songs] : songs) : [];
   const safeName = escapeHtml(playlist.name);
   card.className = "playlist-card";
   card.innerHTML = `
-    <div class="playlist-header">
-      <div>
+    <div class="playlist-cover-stack ${shouldRotate ? "rotating" : ""}" style="--cover-count:${Math.max(coverSongs.length, 1)}">
+      ${coverSongs.length ? `<div class="playlist-cover-base">${coverHtml(coverSongs[0])}</div>${shouldRotate ? coverSongs.slice(1).map((song, index) => `<div class="playlist-cover-layer" style="animation-delay:${(index + 1) * 5}s">${coverHtml(song)}</div>`).join("") : ""}` : `<div class="playlist-cover-base">\u266a</div>`}
+    </div>
+    <div class="playlist-main">
+      <div class="playlist-header">
         <span class="playlist-name">${safeName}</span>
         <span class="playlist-meta">${songs.length} \u043f\u0435\u0441\u0435\u043d</span>
       </div>
-      <div class="playlist-actions">
-        <button class="tiny-button play-playlist" title="\u0418\u0433\u0440\u0430\u0442\u044c \u043f\u043e \u043f\u043e\u0440\u044f\u0434\u043a\u0443">\u25b6</button>
-        <button class="tiny-button shuffle-playlist" title="\u0418\u0433\u0440\u0430\u0442\u044c \u0441\u043b\u0443\u0447\u0430\u0439\u043d\u043e">\u21c4</button>
-        <button class="tiny-button delete-playlist danger" title="\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u043f\u043b\u0435\u0439\u043b\u0438\u0441\u0442">\u00d7</button>
-      </div>
+      ${songs[0] ? `<span class="playlist-preview-title">${escapeHtml(songs[0].title)}</span>` : `<span class="playlist-preview-title">\u0412 \u043f\u043b\u0435\u0439\u043b\u0438\u0441\u0442\u0435 \u043f\u043e\u043a\u0430 \u043d\u0435\u0442 \u043f\u0435\u0441\u0435\u043d.</span>`}
     </div>
-    <div class="playlist-preview">
-      <div class="playlist-cover-stack ${shouldRotate ? "rotating" : ""}" style="--cover-count:${Math.max(coverSongs.length, 1)}">
-        ${coverSongs.length ? `<div class="playlist-cover-base">${coverHtml(coverSongs[0])}</div>${shouldRotate ? coverSongs.slice(1).map((song, index) => `<div class="playlist-cover-layer" style="animation-delay:${(index + 1) * 5}s">${coverHtml(song)}</div>`).join("") : ""}` : `<div class="playlist-cover-base">\u266a</div>`}
-      </div>
-      <div class="playlist-track-window">
-        ${tickerSongs.length ? `<div class="playlist-track-ticker ${shouldRotate ? "" : "static"}">${tickerSongs.map((song) => `<span>${escapeHtml(song.title)}</span>`).join("")}</div>` : `<span class="playlist-empty-text">\u0412 \u043f\u043b\u0435\u0439\u043b\u0438\u0441\u0442\u0435 \u043f\u043e\u043a\u0430 \u043d\u0435\u0442 \u043f\u0435\u0441\u0435\u043d.</span>`}
-      </div>
+    <div class="playlist-actions">
+      <button class="tiny-button play-playlist" title="\u0418\u0433\u0440\u0430\u0442\u044c \u043f\u043e \u043f\u043e\u0440\u044f\u0434\u043a\u0443">\u25b6</button>
+      <button class="tiny-button shuffle-playlist" title="\u0418\u0433\u0440\u0430\u0442\u044c \u0441\u043b\u0443\u0447\u0430\u0439\u043d\u043e">\u21c4</button>
+      <button class="tiny-button delete-playlist danger" title="\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u043f\u043b\u0435\u0439\u043b\u0438\u0441\u0442">\u00d7</button>
     </div>
   `;
   card.addEventListener("click", (event) => {
@@ -1240,10 +1427,13 @@ function renderPlaylistDetail() {
 
 function openPlaylistAddPanel(playlistId) {
   state.editingPlaylistId = playlistId;
+  state.playlistAddSearchQuery = "";
+  if (playlistAddSearchInput) playlistAddSearchInput.value = "";
   const playlist = state.playlists.find((item) => item.id === playlistId);
   playlistAddTitle.textContent = `\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0432 ${playlist?.name || "\u043f\u043b\u0435\u0439\u043b\u0438\u0441\u0442"}`;
   renderPlaylistAddList();
   openPanel(playlistAddPanel);
+  requestAnimationFrame(() => playlistAddSearchInput?.focus());
 }
 
 function renderPlaylistAddList() {
@@ -1254,11 +1444,15 @@ function renderPlaylistAddList() {
     playlistAddList.scrollTop = scrollTop;
     return;
   }
-  const availableSongs = sortedSongs(state.songs.filter((song) => !playlist.songIds.includes(song.id)));
+  const query = state.playlistAddSearchQuery.trim().toLowerCase();
+  const availableSongs = sortedSongs(state.songs.filter((song) => {
+    if (playlist.songIds.includes(song.id)) return false;
+    return !query || matchesSongQuery(song, query);
+  }));
   playlistAddList.replaceChildren(
     ...(availableSongs.length
       ? availableSongs.map((song) => renderPlaylistAddRow(song, playlist))
-      : [emptyMessage("\u0412\u0441\u0435 \u043f\u0435\u0441\u043d\u0438 \u0443\u0436\u0435 \u0434\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u044b \u0432 \u044d\u0442\u043e\u0442 \u043f\u043b\u0435\u0439\u043b\u0438\u0441\u0442.")])
+      : [emptyMessage(query ? "\u041f\u0435\u0441\u043d\u0438 \u043f\u043e \u044d\u0442\u043e\u043c\u0443 \u043f\u043e\u0438\u0441\u043a\u0443 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u044b." : "\u0412\u0441\u0435 \u043f\u0435\u0441\u043d\u0438 \u0443\u0436\u0435 \u0434\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u044b \u0432 \u044d\u0442\u043e\u0442 \u043f\u043b\u0435\u0439\u043b\u0438\u0441\u0442.")])
   );
   playlistAddList.scrollTop = scrollTop;
 }
@@ -1284,7 +1478,7 @@ function renderSelectableSongRow(song, selection, icon, queue = sortedSongs()) {
     </div>
     <div class="song-actions">
       <button class="tiny-button select-now ${selected ? "active" : ""}" title="\u041f\u043e\u043c\u0435\u0442\u0438\u0442\u044c">${selected ? "\u2713" : icon}</button>
-      <button class="tiny-button play-preview ${isPlaying ? "pause-now" : ""}" title="${isPlaying ? "\u041f\u0430\u0443\u0437\u0430" : "\u0418\u0433\u0440\u0430\u0442\u044c"}">${isPlaying ? "\u23f8" : "\u25b6"}</button>
+      <button class="tiny-button play-preview ${isPlaying ? "pause-now" : ""}" title="${isPlaying ? "\u041f\u0430\u0443\u0437\u0430" : "\u0418\u0433\u0440\u0430\u0442\u044c"}">${isPlaying ? "II" : "\u25b6"}</button>
     </div>
   `;
   const toggleSelection = () => {
@@ -1323,16 +1517,21 @@ function renderSeek() {
   seekBar.value = Math.floor(audio.currentTime || 0);
   currentTime.textContent = formatTime(audio.currentTime);
   remainingTime.textContent = `-${formatTime((audio.duration || 0) - (audio.currentTime || 0))}`;
+  updateMediaSessionPosition();
+}
+
+function renderActiveViewContent() {
+  if (state.activeView === "songs" || state.activeView === "favorites") renderSongs();
+  else if (state.activeView === "playlists") renderPlaylists();
+  else if (state.activeView === "genres" || state.activeView === "artists" || state.activeView === "albums") renderGroups();
+  else if (state.activeView === "settings") renderSettings();
 }
 
 function render() {
   renderToolbar();
-  renderSongs();
+  renderActiveViewContent();
   renderPlayer();
   renderQueue();
-  renderPlaylists();
-  renderGroups();
-  renderSettings();
   renderTimer();
   renderSeek();
   setViewTrackTransform();
@@ -1348,6 +1547,7 @@ async function importSongs(files) {
   const newSongs = [];
 
   for (const file of files) {
+    if (!/\.mp3$/i.test(file.name || "")) continue;
     const songId = songIdForFile(file);
     if (existingIds.has(songId)) continue;
     const song = await makeSong(file).catch(() => null);
@@ -1366,20 +1566,36 @@ async function importSongs(files) {
   render();
 }
 
-function nativeRecordToFile(record) {
-  return new File([record.data], record.name, {
-    type: record.type,
-    lastModified: Math.round(record.lastModified),
-  });
+async function importNativeRecords(records) {
+  const existingIds = new Set(state.songs.map((song) => song.id));
+  const newSongs = [];
+
+  for (const record of records || []) {
+    if (!record?.filePath || !/\.mp3$/i.test(record.name || record.filePath)) continue;
+    if (existingIds.has(record.filePath)) continue;
+    const song = await makeSongFromNativeRecord(record).catch(() => null);
+    if (!song) continue;
+    existingIds.add(song.id);
+    state.songs.push(song);
+    newSongs.push(song);
+
+    if (newSongs.length % 50 === 0) {
+      render();
+      await waitForFrame();
+    }
+  }
+
+  for (const song of newSongs) {
+    await saveSong(song).catch(() => {});
+  }
+  render();
 }
 
 async function chooseAndImportSongs() {
   if (window.mp3PlayerNative?.selectAudioFiles) {
     try {
       const records = await window.mp3PlayerNative.selectAudioFiles();
-      if (records.length) {
-        await importSongs(records.map(nativeRecordToFile));
-      }
+      await importNativeRecords(records);
       return;
     } catch (error) {
       console.error("Native audio picker failed", error);
@@ -1396,6 +1612,31 @@ fileInput?.addEventListener("change", async () => {
 
 addMusicButton.addEventListener("click", () => {
   chooseAndImportSongs().catch(() => {});
+});
+
+emptyState?.addEventListener("click", () => {
+  chooseAndImportSongs().catch(() => {});
+});
+
+document.addEventListener("dragover", (event) => {
+  if (!event.dataTransfer?.types?.includes("Files")) return;
+  event.preventDefault();
+  event.dataTransfer.dropEffect = "copy";
+});
+
+document.addEventListener("drop", (event) => {
+  const files = [...(event.dataTransfer?.files || [])];
+  if (!files.length) return;
+  event.preventDefault();
+  const paths = files.map((file) => file.path).filter(Boolean);
+  if (paths.length && window.mp3PlayerNative?.readAudioFiles) {
+    window.mp3PlayerNative.readAudioFiles(paths).then(importNativeRecords).catch(() => {
+      importSongs(files.filter((file) => /\.mp3$/i.test(file.name))).catch(() => {});
+    });
+    return;
+  }
+
+  importSongs(files.filter((file) => /\.mp3$/i.test(file.name))).catch(() => {});
 });
 
 searchToggle.addEventListener("click", () => {
@@ -1431,6 +1672,12 @@ playlistSearchInput.addEventListener("input", () => {
   renderPlaylists();
 });
 
+playlistAddSearchInput?.addEventListener("input", () => {
+  state.playlistAddSearchQuery = playlistAddSearchInput.value;
+  renderPlaylistAddList();
+  scheduleViewPagerHeightUpdate();
+});
+
 favoriteAddButton.addEventListener("click", () => {
   if (favoriteAddPanel.classList.contains("open")) {
     closePanel(favoriteAddPanel);
@@ -1460,6 +1707,8 @@ document.querySelector("#closePlaylistAdd").addEventListener("click", () => {
   closePanel(playlistAddPanel);
   state.editingPlaylistId = null;
   state.pendingPlaylistIds.clear();
+  state.playlistAddSearchQuery = "";
+  if (playlistAddSearchInput) playlistAddSearchInput.value = "";
 });
 
 confirmPlaylistAdd.addEventListener("click", () => {
@@ -1557,6 +1806,8 @@ playlistDetailAddButton.addEventListener("click", () => {
     if (panel === playlistAddPanel) {
       state.pendingPlaylistIds.clear();
       state.editingPlaylistId = null;
+      state.playlistAddSearchQuery = "";
+      if (playlistAddSearchInput) playlistAddSearchInput.value = "";
     }
     if (panel === playlistDetailPanel) {
       state.viewingPlaylistId = null;
@@ -1574,56 +1825,90 @@ playlistDetailAddButton.addEventListener("click", () => {
 
 function selectView(viewName, options = {}) {
   if (!viewNames.includes(viewName)) return;
+  const previousView = state.activeView;
+  const previousIndex = viewNames.indexOf(previousView);
+  const nextIndex = viewNames.indexOf(viewName);
+  const wrapToEnd = previousIndex === 0 && nextIndex === viewNames.length - 1;
+  const wrapToStart = previousIndex === viewNames.length - 1 && nextIndex === 0;
   state.activeView = viewName;
   storageSet("activeView", viewName);
   document.querySelectorAll(".pill").forEach((tab) => tab.classList.toggle("active", tab.dataset.view === viewName));
-  document.querySelectorAll(".view").forEach((view) => {
+  document.querySelectorAll(".view:not(.view-clone)").forEach((view) => {
     const active = view.id === `${viewName}View`;
     view.classList.toggle("active", active);
     view.setAttribute("aria-hidden", active ? "false" : "true");
   });
-  setViewTrackTransform();
+  renderActiveViewContent();
+  if (wrapToEnd || wrapToStart) {
+    refreshViewClones();
+    const startIndex = previousIndex + 1;
+    const targetIndex = wrapToEnd ? 0 : viewNames.length + 1;
+    withoutViewTrackTransition(() => setViewTrackVisualIndex(startIndex));
+    setTimeout(() => {
+      setViewTrackVisualIndex(targetIndex);
+      let finished = false;
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        viewTrack.removeEventListener("transitionend", finish);
+        withoutViewTrackTransition(() => setViewTrackTransform(0, viewName));
+      };
+      viewTrack.addEventListener("transitionend", finish, { once: true });
+      setTimeout(finish, 260);
+    }, 0);
+  } else {
+    setViewTrackTransform();
+  }
   scheduleViewPagerHeightUpdate();
   if (!options.skipTabScroll) scrollActiveTabIntoView();
 }
 
 function setupInfiniteToolbar() {
-  const originalTabs = [...toolbar.querySelectorAll(".pill:not(.tab-clone)")];
-  const fileInputNode = toolbar.querySelector("#fileInput");
-  const prependTabs = originalTabs.map((tab) => {
+  toolbar.querySelectorAll(".tab-clone").forEach((tab) => tab.remove());
+  const originals = [...toolbar.querySelectorAll(".pill:not(.tab-clone)")];
+  const beforeClones = originals.map((tab) => {
     const clone = tab.cloneNode(true);
-    clone.classList.add("tab-clone");
-    clone.setAttribute("aria-hidden", "true");
+    clone.classList.add("tab-clone", "tab-clone-before");
+    clone.tabIndex = -1;
     return clone;
   });
-  const appendTabs = originalTabs.map((tab) => {
+  const afterClones = originals.map((tab) => {
     const clone = tab.cloneNode(true);
-    clone.classList.add("tab-clone");
-    clone.setAttribute("aria-hidden", "true");
+    clone.classList.add("tab-clone", "tab-clone-after");
+    clone.tabIndex = -1;
     return clone;
   });
-
-  toolbar.prepend(...prependTabs);
-  if (fileInputNode) toolbar.append(fileInputNode);
-  toolbar.append(...appendTabs);
-
-  requestAnimationFrame(() => {
-    const cycleWidth = toolbar.scrollWidth / 3;
-    toolbar.scrollLeft = cycleWidth;
-  });
-
-  toolbar.addEventListener("scroll", () => {
-    const cycleWidth = toolbar.scrollWidth / 3;
-    if (cycleWidth <= 0) return;
-    if (toolbar.scrollLeft < cycleWidth * 0.45) toolbar.scrollLeft += cycleWidth;
-    if (toolbar.scrollLeft > cycleWidth * 1.55) toolbar.scrollLeft -= cycleWidth;
-  });
+  toolbar.prepend(...beforeClones);
+  toolbar.append(...afterClones);
 
   let isDragging = false;
   let didDragToolbar = false;
   let suppressNextToolbarClick = false;
   let dragStartX = 0;
   let dragStartScroll = 0;
+
+  const toolbarCycle = () => {
+    const firstOriginal = toolbar.querySelector(".pill:not(.tab-clone)");
+    const firstAfter = toolbar.querySelector(".tab-clone-after");
+    if (!firstOriginal || !firstAfter) return null;
+    const cycleWidth = firstAfter.offsetLeft - firstOriginal.offsetLeft;
+    return cycleWidth > 0 ? { start: firstOriginal.offsetLeft, cycleWidth } : null;
+  };
+
+  const normalizeToolbarScroll = () => {
+    const cycle = toolbarCycle();
+    if (!cycle) return;
+    if (toolbar.scrollLeft < cycle.start - cycle.cycleWidth * 0.45) {
+      toolbar.scrollLeft += cycle.cycleWidth;
+    } else if (toolbar.scrollLeft > cycle.start + cycle.cycleWidth * 1.45) {
+      toolbar.scrollLeft -= cycle.cycleWidth;
+    }
+  };
+
+  requestAnimationFrame(() => {
+    const cycle = toolbarCycle();
+    if (cycle) toolbar.scrollLeft = cycle.start;
+  });
 
   toolbar.addEventListener("pointerdown", (event) => {
     if (event.button !== undefined && event.button !== 0) return;
@@ -1642,6 +1927,7 @@ function setupInfiniteToolbar() {
     suppressNextToolbarClick = true;
     toolbar.classList.add("dragging");
     toolbar.scrollLeft = dragStartScroll - delta;
+    normalizeToolbarScroll();
     event.preventDefault();
   });
 
@@ -1673,8 +1959,13 @@ function setupInfiniteToolbar() {
   toolbar.addEventListener("wheel", (event) => {
     if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
     toolbar.scrollLeft += event.deltaY;
+    normalizeToolbarScroll();
     event.preventDefault();
   }, { passive: false });
+
+  toolbar.addEventListener("scroll", () => {
+    if (isDragging) normalizeToolbarScroll();
+  });
 
   toolbar.addEventListener("click", (event) => {
     if (!suppressNextToolbarClick) return;
@@ -1686,89 +1977,39 @@ function setupInfiniteToolbar() {
 
 function setupViewPager() {
   if (!viewPager || !viewTrack) return;
-
-  let isDragging = false;
-  let dragMode = "";
-  let startX = 0;
-  let startY = 0;
-  let dragOffset = 0;
-  let suppressNextPagerClick = false;
-
-  const finishDrag = (event) => {
-    if (!isDragging) return;
-    isDragging = false;
-    viewPager.releasePointerCapture?.(event.pointerId);
-    viewPager.classList.remove("dragging");
-
-    if (dragMode === "x") {
-      const width = viewPager.clientWidth || window.innerWidth;
-      const threshold = Math.min(90, width * 0.22);
-      const currentIndex = activeViewIndex();
-      let nextIndex = currentIndex;
-
-      if (Math.abs(dragOffset) > threshold) {
-        nextIndex = dragOffset < 0
-          ? Math.min(viewNames.length - 1, currentIndex + 1)
-          : Math.max(0, currentIndex - 1);
-      }
-
-      suppressNextPagerClick = true;
-      selectView(viewNames[nextIndex], { skipTabScroll: false });
-      setViewTrackTransform();
-    }
-
-    dragMode = "";
-    dragOffset = 0;
+  const stripCloneIds = (clone) => {
+    clone.removeAttribute("id");
+    clone.querySelectorAll("[id]").forEach((element) => element.removeAttribute("id"));
+    clone.querySelectorAll("input, button, a, select, textarea").forEach((element) => {
+      element.tabIndex = -1;
+      element.setAttribute("aria-hidden", "true");
+    });
   };
 
-  viewPager.addEventListener("pointerdown", (event) => {
-    if (event.button !== undefined && event.button !== 0) return;
-    if (event.target.closest("input, textarea, select")) return;
-    isDragging = true;
-    dragMode = "";
-    dragOffset = 0;
-    startX = event.clientX;
-    startY = event.clientY;
-    viewPager.setPointerCapture?.(event.pointerId);
-  });
-
-  viewPager.addEventListener("pointermove", (event) => {
-    if (!isDragging) return;
-    const deltaX = event.clientX - startX;
-    const deltaY = event.clientY - startY;
-
-    if (!dragMode && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
-      dragMode = Math.abs(deltaX) > Math.abs(deltaY) * 1.15 ? "x" : "y";
+  refreshViewClones = () => {
+    const settingsView = document.querySelector("#settingsView");
+    const songsView = document.querySelector("#songsView");
+    const beforeClone = viewTrack.querySelector(".view-clone-before");
+    const afterClone = viewTrack.querySelector(".view-clone-after");
+    if (settingsView && beforeClone) {
+      beforeClone.innerHTML = settingsView.innerHTML;
+      stripCloneIds(beforeClone);
     }
+    if (songsView && afterClone) {
+      afterClone.innerHTML = songsView.innerHTML;
+      stripCloneIds(afterClone);
+    }
+  };
 
-    if (dragMode !== "x") return;
-
-    const currentIndex = activeViewIndex();
-    const atStart = currentIndex === 0 && deltaX > 0;
-    const atEnd = currentIndex === viewNames.length - 1 && deltaX < 0;
-    dragOffset = atStart || atEnd ? deltaX * 0.28 : deltaX;
-    viewPager.classList.add("dragging");
-    setViewTrackTransform(dragOffset);
-    event.preventDefault();
-  }, { passive: false });
-
-  viewPager.addEventListener("pointerup", finishDrag);
-  viewPager.addEventListener("pointercancel", finishDrag);
-  viewPager.addEventListener("lostpointercapture", () => {
-    if (!isDragging) return;
-    isDragging = false;
-    dragMode = "";
-    dragOffset = 0;
-    viewPager.classList.remove("dragging");
-    setViewTrackTransform();
-  });
-
-  viewPager.addEventListener("click", (event) => {
-    if (!suppressNextPagerClick) return;
-    suppressNextPagerClick = false;
-    event.preventDefault();
-    event.stopPropagation();
-  }, true);
+  const settingsClone = document.querySelector("#settingsView").cloneNode(true);
+  settingsClone.className = "view view-clone view-clone-before";
+  stripCloneIds(settingsClone);
+  const songsClone = document.querySelector("#songsView").cloneNode(true);
+  songsClone.className = "view view-clone view-clone-after";
+  stripCloneIds(songsClone);
+  viewTrack.prepend(settingsClone);
+  viewTrack.append(songsClone);
+  refreshViewClones();
 
   window.addEventListener("resize", () => {
     setViewTrackTransform();
@@ -1849,8 +2090,7 @@ document.querySelector("#closePlayer").addEventListener("click", () => {
 
 themeToggle?.addEventListener("click", () => setTheme());
 settingsThemeToggle?.addEventListener("click", () => setTheme());
-languageEnglish?.addEventListener("click", () => setLanguage("en"));
-languageRussian?.addEventListener("click", () => setLanguage("ru"));
+languageSelect?.addEventListener("change", () => setLanguage(languageSelect.value));
 deleteAllSongsButton?.addEventListener("click", requestDeleteAllSongs);
 deleteAllPlaylistsButton?.addEventListener("click", requestDeleteAllPlaylists);
 
@@ -1874,6 +2114,7 @@ loopButton.addEventListener("click", () => {
 
 seekBar.addEventListener("input", () => {
   audio.currentTime = Number(seekBar.value);
+  updateMediaSessionPosition();
 });
 
 function setSleepTimer(minutes) {
@@ -1925,12 +2166,13 @@ audio.addEventListener("loadedmetadata", () => {
   render();
 });
 
+setupMediaSessionControls();
 applyTheme();
 applyLanguage();
-selectView(state.activeView, { skipTabScroll: true });
 setInterval(renderTimer, 1000);
 setupInfiniteToolbar();
 setupViewPager();
+selectView(state.activeView, { skipTabScroll: true });
 loadSavedSongs()
   .then((songs) => {
     state.songs = songs;
